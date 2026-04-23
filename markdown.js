@@ -26,6 +26,7 @@
     };
 
     var externallink = "/assets/images/icons/linkbluesmall.png";
+    var activecitationrenderer = null;
 
     /*//////////////////////////////////////////////////////////////////////*/
 
@@ -147,7 +148,11 @@
 
     /*//////////////////////////////////////////////////////////////////////*/
 
-    function parseinline(txt) {
+    function parseinline(txt, opts) {
+        opts = opts || {};
+        var rendercitationref = typeof opts.rendercitationref === "function"
+            ? opts.rendercitationref
+            : (typeof activecitationrenderer === "function" ? activecitationrenderer : null);
         var escapes = [];
         var neutralized = String(txt || "").replace(/\\([\\`*_~\[\]\(\)-])/g, function (_, ch) {
             var token = "%%esc" + escapes.length + "%%";
@@ -155,6 +160,15 @@
             return token;
         });
         var safe = escapehtml(neutralized);
+        safe = safe.split("\n").map(function (line) {
+            if (/^\s*-#\s+/.test(line)) {
+                return '<span class="sizetextsmall">' + line.replace(/^\s*-#\s+/, "") + "</span>";
+            }
+            if (/^\s*#\s+/.test(line)) {
+                return '<span class="sizetextbig">' + line.replace(/^\s*#\s+/, "") + "</span>";
+            }
+            return line;
+        }).join("\n");
 
         safe = safe
             // inline code with single or double ticks
@@ -181,6 +195,16 @@
             // external links
             .replace(/\[([^\]]+)\]\(([^)]+)\)/g, function (_, label, href) {
                 return buildlinkhtml(label, href);
+            })
+            // cite references like [^id] and cite needed like [^?]
+            .replace(/\[\^([^\]]+)\]/g, function (_, id) {
+                var key = String(id || "").trim();
+                if (key === "?") {
+                    return '<sup class="citationneeded"><a href="' + escapeattr(makewikihref("Wiki:Provide sources to big claims")) + '"><em>(source?)</em></a></sup>';
+                }
+                if (!key) return "";
+                if (rendercitationref) return rendercitationref(key);
+                return '<sup class="citeref">[?]</sup>';
             });
 
         safe = safe.replace(/ - /g, " — ");
@@ -322,12 +346,48 @@
     /*//////////////////////////////////////////////////////////////////////*/
 
     function markdowntohtml(md) {
+        activecitationrenderer = null;
         var cleanmd = String(md || "")
             .replace(/\r\n/g, "\n")
             .replace(/<!--[\s\S]*?-->/g, "");
         var lines = cleanmd.split("\n");
         var html = []; var inlist = false;
         var inblockquote = false;
+        var citationsbyid = {};
+        var citationorder = [];
+        var citationdefs = {};
+
+        function escid(id) {
+            return String(id || "").replace(/[^a-z0-9_-]/gi, "-");
+        }
+        function parsecitationdefinition(raw) {
+            var val = String(raw || "").trim();
+            if (!val) return { desc: "", link: "" };
+            var pipe = val.indexOf("|");
+            if (pipe !== -1) {
+                return {
+                    desc: val.slice(0, pipe).trim(),
+                    link: val.slice(pipe + 1).trim()
+                };
+            }
+            if (/^(https?:\/\/|mailto:)/i.test(val)) {
+                return { desc: "", link: val };
+            }
+            return { desc: val, link: "" };
+        }
+        function registercitationref(id) {
+            if (!citationsbyid[id]) {
+                citationsbyid[id] = citationorder.length + 1;
+                citationorder.push(id);
+            }
+            var idx = citationsbyid[id];
+            var safeid = escid(id);
+            return '<sup class="citeref"><a id="cite-ref-' + safeid + '" href="#cite-note-' + safeid + '">[' + idx + "]</a></sup>";
+        }
+        function inlinewithcites(text) {
+            return parseinline(text, { rendercitationref: registercitationref });
+        }
+        activecitationrenderer = registercitationref;
 
         function closelist() {
             if (inlist) {
@@ -348,6 +408,13 @@
 
             if (!trimmed) {
                 closelist(); closequote();
+                continue;
+            }
+
+            var citedef = trimmed.match(/^\[\^([^\]]+)\]:\s*(.*)$/);
+            if (citedef) {
+                var citeid = String(citedef[1] || "").trim();
+                if (citeid) citationdefs[citeid] = parsecitationdefinition(citedef[2] || "");
                 continue;
             }
 
@@ -392,7 +459,7 @@
             if (heading) {
                 closelist(); closequote();
                 var lvl = heading[1].length;
-                html.push("<h" + lvl + ">" + parseinline(heading[2]) + "</h" + lvl + ">"); continue;
+                html.push("<h" + lvl + ">" + inlinewithcites(heading[2]) + "</h" + lvl + ">"); continue;
             }
 
             // separators
@@ -409,7 +476,7 @@
                     html.push('<ul class="articlelist">');
                     inlist = true;
                 }
-                html.push("<li>" + parseinline(trimmed.replace(/^[-*]\s+/, "")) + "</li>");
+                html.push("<li>" + inlinewithcites(trimmed.replace(/^[-*]\s+/, "")) + "</li>");
                 continue;
             }
 
@@ -421,7 +488,7 @@
                     html.push('<blockquote class="quote">');
                     inblockquote = true;
                 }
-                html.push("<p>" + parseinline(quote[1]) + "</p>");
+                html.push("<p>" + inlinewithcites(quote[1]) + "</p>");
                 continue;
             }
 
@@ -429,13 +496,30 @@
             if (/^-#\s+/.test(trimmed)) {
                 closelist();
                 closequote();
-                html.push('<p class="paragraph smalltext">' + parseinline(trimmed.replace(/^-#\s+/, "")) + "</p>");
+                html.push('<p class="paragraph smalltext">' + inlinewithcites(trimmed.replace(/^-#\s+/, "")) + "</p>");
                 continue;
             }
             closelist(); closequote();
-            html.push('<p class="paragraph">' + parseinline(trimmed) + "</p>");
+            html.push('<p class="paragraph">' + inlinewithcites(trimmed) + "</p>");
         }
         closelist(); closequote();
+        if (citationorder.length) {
+            var refs = citationorder.map(function (id) {
+                var def = citationdefs[id] || { desc: "", link: "" };
+                var safeid = escid(id);
+                var chunks = [];
+                if (def.desc) chunks.push(inlinewithcites(def.desc));
+                if (def.link) {
+                    var safelink = sanitizehref(def.link);
+                    var linklabel = def.desc ? "Source link" : def.link;
+                    chunks.push(buildlinkhtml(escapehtml(linklabel), safelink));
+                }
+                if (!chunks.length) chunks.push('<span class="infoboxwarning">(no citation details, this is likely a mistake)</span>');
+                return '<li id="cite-note-' + safeid + '">' + chunks.join(" ") + ' <a class="citeback" href="#cite-ref-' + safeid + '">^</a></li>';
+            }).join("");
+            html.push('<section class="citations"><h2>References</h2><ol>' + refs + "</ol></section>");
+        }
+        activecitationrenderer = null;
         return html.join("\n");
     }
 

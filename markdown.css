@@ -8,7 +8,39 @@
     font-size: 0.85em;
     opacity: 0.75;
 }
+.sizetextsmall {
+    font-size: 0.85em;
+    opacity: 0.75;
+}
+.sizetextbig {
+    font-size: 1.25em;
+    line-height: 1.2;
+}
 .redirectnote {margin-top: -8px}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.citeref, .citationneeded {
+    font-size: 0.75em;
+    vertical-align: super;
+    margin-left: 1px;
+}
+.citationneeded em {font-style: italic}
+.citations {
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 2px solid rgba(255,255,255,0.35);
+}
+.citations ol {
+    margin: 8px 0 0 18px;
+    display: grid; gap: 6px;
+}
+.citeback {
+    opacity: 0.8;
+    margin-left: 6px;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
 
 .quote {
     display: flow-root;

@@ -36,7 +36,7 @@ a, :any-link {
 }
 a:hover, :any-link:hover {color: #b4f4ff}
 
-b, strong {font-weight: 700}
+b, strong {font-weight: 600}
 h1, h2, h3, h4, h5, h6 {font-weight: 400}
 
 .page {
