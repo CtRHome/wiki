@@ -64,7 +64,11 @@ caption: I was going to put another cabbit here but i needed to showcase the bin
 ::
 Text again lalalala!
 
+Have a source[^example], but not here[^?]
+
 ::media left
 url: https://github.com/CtRHome/CutTheRope-WindowsDecomp/raw/refs/heads/main/CutTheRope.cjs
 caption: You usually won't be able to see this caption
 ::
+
+[^example]: Woof | https://github.com/CtRHome/wiki

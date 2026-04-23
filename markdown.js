@@ -381,8 +381,7 @@
                 citationorder.push(id);
             }
             var idx = citationsbyid[id];
-            var safeid = escid(id);
-            return '<sup class="citeref"><a id="cite-ref-' + safeid + '" href="#cite-note-' + safeid + '">[' + idx + "]</a></sup>";
+            return '<sup class="citeref"><a id="citeref' + idx + '" href="#" data-cite-target="cite' + idx + '">[' + idx + "]</a></sup>";
         }
         function inlinewithcites(text) {
             return parseinline(text, { rendercitationref: registercitationref });
@@ -404,6 +403,12 @@
 
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
+            var linedef = line.match(/^(.*)\[\^([^\]]+)\]:\s*(.*)$/);
+            if (linedef) {
+                var inlineid = String(linedef[2] || "").trim();
+                if (inlineid) citationdefs[inlineid] = parsecitationdefinition(linedef[3] || "");
+                line = String(linedef[1] || "");
+            }
             var trimmed = line.trim();
 
             if (!trimmed) {
@@ -506,7 +511,7 @@
         if (citationorder.length) {
             var refs = citationorder.map(function (id) {
                 var def = citationdefs[id] || { desc: "", link: "" };
-                var safeid = escid(id);
+                var idx = citationsbyid[id];
                 var chunks = [];
                 if (def.desc) chunks.push(inlinewithcites(def.desc));
                 if (def.link) {
@@ -515,7 +520,7 @@
                     chunks.push(buildlinkhtml(escapehtml(linklabel), safelink));
                 }
                 if (!chunks.length) chunks.push('<span class="infoboxwarning">(no citation details, this is likely a mistake)</span>');
-                return '<li id="cite-note-' + safeid + '">' + chunks.join(" ") + ' <a class="citeback" href="#cite-ref-' + safeid + '">^</a></li>';
+                return '<li id="cite' + idx + '">' + chunks.join(" ") + ' <a class="citeback" href="#" data-cite-target="citeref' + idx + '">^</a></li>';
             }).join("");
             html.push('<section class="citations"><h2>References</h2><ol>' + refs + "</ol></section>");
         }
@@ -592,6 +597,17 @@
         if (window.Prism && typeof window.Prism.highlightAllUnder === "function") {
             window.Prism.highlightAllUnder(contentroot);
         }
+        var citeanchors = contentroot.querySelectorAll("[data-cite-target]");
+        citeanchors.forEach(function (anchor) {
+            anchor.addEventListener("click", function (e) {
+                e.preventDefault();
+                var targetid = anchor.getAttribute("data-cite-target");
+                if (!targetid) return;
+                var target = document.getElementById(targetid);
+                if (!target) return;
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+            });
+        });
     }
     async function loadarticlefromhash() {
         if (!contentroot) return;
@@ -607,6 +623,7 @@
                 maintitle.replace("$TITLE$", escapehtml(art.hashtitle)) +
                 '<p class="paragraph">There is currently no text in this page. ' +
                 'You can contribute by <a href="https://github.com/CtRHome/wiki/new/main/articles?filename=' + escapeattr(art.title) + '.md">creating it</a>!</p>';
+            document.dispatchEvent(new CustomEvent("wiki:article-rendered", { detail: { hash: hashval } }));
             return;
         }
 
@@ -630,6 +647,7 @@
             currentres = targetres;
         }
         renderarticle(currentarticle.hashtitle, currentres.markdown, { redirectedfrom: redirectfrom });
+        document.dispatchEvent(new CustomEvent("wiki:article-rendered", { detail: { hash: currenthash } }));
     }
 
     window.WikiMarkdown = {

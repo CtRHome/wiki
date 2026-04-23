@@ -14,7 +14,7 @@
         return normalizehash().replace(/\s+/g, "_") === previewhash.replace(/\s+/g, "_");
     }
     function getdraft() {
-        return localStorage.getItem(storagekey) || "# New Article\n\nStart writing here...";
+        return localStorage.getItem(storagekey) || "Start writing here...";
     }
     function setdraft(value) {
         localStorage.setItem(storagekey, value);
@@ -141,6 +141,7 @@
 
         applysavedlayout();
         setcollapsed(localStorage.getItem(hiddenkey) === "1");
+        renderpreviewnow();
         makemovable(panel.querySelector(".playgrounddraghandle"));
         makeresizable(panel.querySelector(".playgroundresizehandle"));
         return panel;
@@ -205,8 +206,12 @@
         });
     }
     function enterpreviewmode() {
-        createpanel(); panel.style.display = "";
-        settoolbarmode(true); renderpreviewnow();
+        createpanel();
+        textarea.value = getdraft();
+        panel.style.display = "";
+        settoolbarmode(true);
+        renderpreviewnow();
+        window.setTimeout(renderpreviewnow, 0);
     }
     function leavepreviewmode() {
         if (panel) panel.style.display = "none";
@@ -228,6 +233,12 @@
     window.addEventListener("hashchange", function () {
         syncpreviewmode();
         if (ispreviewmode) window.setTimeout(renderpreviewnow, 0);
+    });
+    document.addEventListener("wiki:article-rendered", function () {
+        if (!ispreviewmode) return;
+        if (!textarea) return;
+        textarea.value = getdraft();
+        renderpreviewnow();
     });
     document.addEventListener("DOMContentLoaded", function () {
         syncpreviewmode();

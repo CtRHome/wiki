@@ -1,6 +1,5 @@
-Please provide reliable sources for something that may otherwise seem fabricated. You usually do not need this, but there are edge cases where it's best to add a little[^quote] [^1]: quote
+Please provide reliable sources for something that may otherwise seem fabricated. You usually do not need this, but there are edge cases where it's best to add a little[^1]
 
-- Prefer primary sources when possible.
 - Add a citation marker in the article text, then define it at the bottom.
 - Citation format:
 `\[^id]` inside text, and `\[^id]: description | https://example.com`
@@ -10,3 +9,5 @@ Please provide reliable sources for something that may otherwise seem fabricated
 
 - If only the description is needed:
 `\[^id]: erm this is factual`
+
+[^1]: Quote

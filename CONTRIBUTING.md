@@ -10,6 +10,9 @@
   - The variable right below ⬑ `hostwhitelist` also indicates which filetypes will outright refuse to be shown on the wiki. It might change over time due to demand.
 - Use `\` to escape markdown conversions if you need literal characters.
 - Use wiki links with `[[Article Name]]` or `[[Article Name|Custom text]]`.
+- Use citations for stuff that can be backed up — put a reference anywhere as `[^something]` and define it at the bottom of the markdown file as `[^something]: info | https://example.com`
+    - having those separately is also allowed: `[^something]: https://example.com` or `[^something2]: info`
+  - citation needed marker: `[^?]` (more might be added later)
 - Commit with the finished article markdown file.
 
 See the [Markdown Example](https://ctrhome.github.io/wiki#Special:Preview) page for more!

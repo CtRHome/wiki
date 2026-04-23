@@ -6,7 +6,7 @@ caption: Screenshot of a fresh virtual machine visiting [cuttherope.fandom.com/w
 
 > "Why not?"
 Ever since the start of the pandemic Fandom has been aggressively pushing advertisements and AI-generated content 
-As of 2026, fandom.com is in the **40th** most visited website in the world[^?] 
+As of 2026, fandom.com is in the **40th** most visited website in the world[^1]
 
 For a detailed overview, you can read the 25+ paragraphs 
 
@@ -14,3 +14,5 @@ For a detailed overview, you can read the 25+ paragraphs
 This wiki might link or embed to very obviously **copyrighted material**, some with dubious ethicality like **decompiling**.
 Some of the used assets do classify under fair use, however wiki farms like [Miraheze](https://miraheze.org) and [wiki.gg](https://www.wiki.gg) prohibit hosting such content regardless.
 Hence why the exotic **GitHub Pages** form was adopted - the site is fully customizable, anything can be hosted that doesn't heavily violate their own Terms of Service and it's fully static so we don't have to worry about keeping servers up!
+
+[^1]: https://web.archive.org/web/20260423065013/https://en.wikipedia.org/wiki/List_of_most-visited_websites#:~:text=%C2%A0Russia-,Fandom,-fandom.com
