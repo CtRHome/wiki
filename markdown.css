@@ -16,7 +16,6 @@
     border-left: 5px solid rgba(255,255,255,0.5);
     background: rgba(0,0,0,0.2);
     border-radius: 10px;
-    clear: both;
 }
 .quote p { margin: 0 0 8px; }
 .quote p:last-child { margin-bottom: 0; }
@@ -133,10 +132,8 @@
     overflow: auto;
 }
 .embed video, .embed img, .embed audio {
-    width: 100%;
-    max-width: 300px;
-    max-height: 300px;
-    object-fit: contain;
+    width: 100%; max-width: 300px;
+    max-height: 300px; object-fit: contain;
     border-radius: 8px;
 }
 .embed audio {border-radius: 0}
@@ -192,10 +189,8 @@
 /*//////////////////////////////////////////////////////////////////////*/
 
 .externallinkwrap {
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: baseline;
-    gap: 3px;
+    white-space: nowrap; display: inline-flex;
+    align-items: baseline; gap: 3px;
 }
 .externalicon {
     width: auto !important;

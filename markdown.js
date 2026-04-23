@@ -63,6 +63,7 @@
             return { ok: false, reason: "This URL scheme is not allowed..." };
         }
 
+        // chunk below's for unique errors
         var parsed;
         try {parsed = new URL(raw, window.location.href)} 
         catch (_err) {return {ok: false, reason: "The URL for this file was invalid."}}
@@ -105,11 +106,8 @@
         if (href.startsWith("./") || href.startsWith("../")) return escapeattr(href);
 
         var parsed;
-        try {
-            parsed = new URL(href, window.location.href);
-        } catch (_err) {
-            return "#";
-        }
+        try {parsed = new URL(href, window.location.href)}
+        catch (_err) {return "#"}
 
         var protocol = parsed.protocol.toLowerCase();
         if (protocol === "http:" || protocol === "https:" || protocol === "mailto:") {
@@ -245,8 +243,7 @@
                 data[lastkey] += "\n" + cont;
                 for (var r = rowsource.length - 1; r >= 0; r--) {
                     if (rowsource[r].key === lastkey) {
-                        rowsource[r].value = data[lastkey];
-                        break;
+                        rowsource[r].value = data[lastkey]; break;
                     }
                 }
             }
@@ -329,8 +326,7 @@
             .replace(/\r\n/g, "\n")
             .replace(/<!--[\s\S]*?-->/g, "");
         var lines = cleanmd.split("\n");
-        var html = [];
-        var inlist = false;
+        var html = []; var inlist = false;
         var inblockquote = false;
 
         function closelist() {
@@ -351,8 +347,7 @@
             var trimmed = line.trim();
 
             if (!trimmed) {
-                closelist();
-                closequote();
+                closelist(); closequote();
                 continue;
             }
 
@@ -361,8 +356,7 @@
             // code
             // ```
             if (/^```/.test(trimmed)) {
-                closelist();
-                closequote();
+                closelist(); closequote();
 
                 var lang = (trimmed.slice(3).trim().toLowerCase() || "txt").replace(/[^a-z0-9_-]/g, "");
                 var codelines = [];

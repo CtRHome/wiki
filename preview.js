@@ -1,7 +1,9 @@
 (function () {
     var previewhash = "Special:Preview";
     var storagekey = "yourplaygroundarticle";
-    var panel; var textarea; var submittab; var prismcode; var togglebutton;
+    var layoutkey = "yourplaygroundlayout";
+    var hiddenkey = "yourplaygroundishidden";
+    var panel; var textarea; var submittab; var togglebutton;
     var ispreviewmode = false; var rendertimer = 0;
 
     function normalizehash() {
@@ -37,17 +39,42 @@
         window.WikiMarkdown.renderarticle("Special:Preview", textarea.value || "");
         updatesubmithref();
     }
-    function rendereditorhighlight() {
-        if (!prismcode || !textarea) return;
-        var content = textarea.value || "";
-        prismcode.textContent = content + "\n";
-        if (window.Prism && typeof window.Prism.highlightElement === "function") {
-            window.Prism.highlightElement(prismcode);
-        }
-    }
     function schedulerender() {
         if (rendertimer) window.clearTimeout(rendertimer);
         rendertimer = window.setTimeout(renderpreviewnow, 500);
+    }
+    function savelayout() {
+        if (!panel) return;
+        var rect = panel.getBoundingClientRect();
+        localStorage.setItem(layoutkey, JSON.stringify({
+            left: Math.round(rect.left),
+            top: Math.round(rect.top),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height)
+        }));
+    }
+    function applysavedlayout() {
+        if (!panel) return;
+        var raw = localStorage.getItem(layoutkey);
+        if (!raw) return;
+        try {
+            var layout = JSON.parse(raw);
+            if (layout && typeof layout.left === "number" && typeof layout.top === "number") {
+                panel.style.left = layout.left + "px";
+                panel.style.top = layout.top + "px";
+                panel.style.bottom = "auto";
+                panel.style.right = "auto";
+            }
+            if (layout && typeof layout.width === "number") panel.style.width = Math.max(320, layout.width) + "px";
+            if (layout && typeof layout.height === "number") panel.style.height = Math.max(160, layout.height) + "px";
+        } catch (_err) {}
+    }
+    function setcollapsed(collapsed) {
+        if (!panel || !togglebutton) return;
+        panel.style.display = collapsed ? "none" : "";
+        localStorage.setItem(hiddenkey, collapsed ? "1" : "");
+        togglebutton.querySelector("img").src = collapsed ? "/assets/images/icons/up.png" : "/assets/images/icons/down.png";
+        if (!collapsed && textarea) textarea.focus();
     }
     function ensuresubmittab() {
         var tabs = document.querySelector(".tabs");
@@ -92,7 +119,6 @@
             '<button class="playgrounddraghandle" title="Drag panel"></button>' +
             '<button class="playgroundresizehandle" title="Resize panel"></button>' +
             '<div class="playgroundeditor">' +
-            '<pre class="playgroundsyntax language-markdown"><code class="language-markdown"></code></pre>' +
             '<textarea class="playgroundinput" spellcheck="false" placeholder="Write markdown here..."></textarea>' +
             "</div>";
         document.body.appendChild(panel);
@@ -102,27 +128,19 @@
         togglebutton.innerHTML = '<img src="/assets/images/icons/down.png" alt="">';
         document.body.appendChild(togglebutton);
 
-        prismcode = panel.querySelector(".playgroundsyntax code");
         textarea = panel.querySelector(".playgroundinput");
         textarea.value = getdraft();
         textarea.addEventListener("input", function () {
             setdraft(textarea.value || "");
-            rendereditorhighlight();
             schedulerender();
-        });
-        textarea.addEventListener("scroll", function () {
-            var pre = panel.querySelector(".playgroundsyntax");
-            pre.scrollTop = textarea.scrollTop;
-            pre.scrollLeft = textarea.scrollLeft;
         });
 
         togglebutton.addEventListener("click", function () {
-            var hidden = panel.classList.toggle("hidden");
-            togglebutton.querySelector("img").src = hidden ? "/assets/images/icons/up.png" : "/assets/images/icons/down.png";
-            if (!hidden) textarea.focus();
+            setcollapsed(panel.style.display !== "none");
         });
 
-        rendereditorhighlight();
+        applysavedlayout();
+        setcollapsed(localStorage.getItem(hiddenkey) === "1");
         makemovable(panel.querySelector(".playgrounddraghandle"));
         makeresizable(panel.querySelector(".playgroundresizehandle"));
         return panel;
@@ -130,17 +148,13 @@
     function makemovable(handle) {
         if (!handle || !panel) return;
         var dragging = false;
-        var startx = 0;
-        var starty = 0;
-        var panelx = 0;
-        var panely = 0;
+        var startx = 0; var starty = 0;
+        var panelx = 0; var panely = 0;
         handle.addEventListener("mousedown", function (e) {
             dragging = true;
-            startx = e.clientX;
-            starty = e.clientY;
+            startx = e.clientX; starty = e.clientY;
             var rect = panel.getBoundingClientRect();
-            panelx = rect.left;
-            panely = rect.top;
+            panelx = rect.left; panely = rect.top;
             panel.style.left = panelx + "px";
             panel.style.top = panely + "px";
             panel.style.right = "auto";
@@ -153,44 +167,46 @@
             panel.style.top = (panely + (e.clientY - starty)) + "px";
         });
         document.addEventListener("mouseup", function () {
+            if (dragging) savelayout();
             dragging = false;
         });
     }
     function makeresizable(handle) {
         if (!handle || !panel) return;
-        var resizing = false; var starty = 0;
-        var starth = 0; var starttop = 0;
+        var resizing = false;
+        var startx = 0; var starty = 0;
+        var startw = 0; var starth = 0; var starttop = 0;
         handle.addEventListener("mousedown", function (e) {
-            resizing = true;
+            resizing = true; startx = e.clientX;
             starty = e.clientY;
             var rect = panel.getBoundingClientRect();
-            starth = rect.height;
+            startw = rect.width; starth = rect.height;
             starttop = rect.top;
             panel.style.left = rect.left + "px";
             panel.style.top = rect.top + "px";
-            panel.style.right = "auto";
-            panel.style.bottom = "auto";
+            panel.style.right = "auto"; panel.style.bottom = "auto";
             e.preventDefault();
         });
         document.addEventListener("mousemove", function (e) {
             if (!resizing) return;
-            var deltay = e.clientY - starty;
-            var next = starth - deltay;
-            var minh = 160;
+            var deltax = e.clientX - startx; var deltay = e.clientY - starty;
+            var nextw = startw + deltax; var nexth = starth - deltay;
+            var minw = 320; var minh = 160;
+            var maxw = Math.max(window.innerWidth * 0.95, minw);
             var maxh = Math.max(window.innerHeight * 0.95, minh);
-            var clamped = Math.max(minh, Math.min(maxh, next));
-            panel.style.height = clamped + "px";
-            panel.style.top = (starttop + (starth - clamped)) + "px";
+            var clampedw = Math.max(minw, Math.min(maxw, nextw));
+            var clampedh = Math.max(minh, Math.min(maxh, nexth));
+            panel.style.width = clampedw + "px"; panel.style.height = clampedh + "px";
+            panel.style.top = (starttop + (starth - clampedh)) + "px";
         });
         document.addEventListener("mouseup", function () {
+            if (resizing) savelayout();
             resizing = false;
         });
     }
     function enterpreviewmode() {
-        createpanel();
-        panel.style.display = "";
-        settoolbarmode(true);
-        renderpreviewnow();
+        createpanel(); panel.style.display = "";
+        settoolbarmode(true); renderpreviewnow();
     }
     function leavepreviewmode() {
         if (panel) panel.style.display = "none";
@@ -204,6 +220,7 @@
         if (ispreviewmode) {
             enterpreviewmode();
             if (togglebutton) togglebutton.style.display = "";
+            if (panel && localStorage.getItem(hiddenkey) === "1") panel.style.display = "none";
         }
         else leavepreviewmode();
     }
