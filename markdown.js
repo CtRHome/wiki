@@ -375,6 +375,25 @@
             }
             return { desc: val, link: "" };
         }
+        function extractinlinedefinition(line) {
+            var source = String(line || "");
+            var start = 0;
+            while (true) {
+                var idx = source.indexOf("[^", start);
+                if (idx === -1) return { text: source, id: "", def: "" };
+                if (idx > 0 && source[idx - 1] === "\\") {
+                    start = idx + 2;
+                    continue;
+                }
+                var tail = source.slice(idx);
+                var m = tail.match(/^\[\^([^\]]+)\]:\s*(.*)$/);
+                if (!m) {
+                    start = idx + 2;
+                    continue;
+                }
+                return { text: source.slice(0, idx), id: String(m[1] || "").trim(), def: String(m[2] || "") };
+            }
+        }
         function registercitationref(id) {
             if (!citationsbyid[id]) {
                 citationsbyid[id] = citationorder.length + 1;
@@ -403,11 +422,10 @@
 
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
-            var linedef = line.match(/^(.*)\[\^([^\]]+)\]:\s*(.*)$/);
-            if (linedef) {
-                var inlineid = String(linedef[2] || "").trim();
-                if (inlineid) citationdefs[inlineid] = parsecitationdefinition(linedef[3] || "");
-                line = String(linedef[1] || "");
+            var inlinedef = extractinlinedefinition(line);
+            if (inlinedef.id) {
+                citationdefs[inlinedef.id] = parsecitationdefinition(inlinedef.def || "");
+                line = inlinedef.text;
             }
             var trimmed = line.trim();
 
@@ -520,7 +538,7 @@
                     chunks.push(buildlinkhtml(escapehtml(linklabel), safelink));
                 }
                 if (!chunks.length) chunks.push('<span class="infoboxwarning">(no citation details, this is likely a mistake)</span>');
-                return '<li id="cite' + idx + '">' + chunks.join(" ") + ' <a class="citeback" href="#" data-cite-target="citeref' + idx + '">^</a></li>';
+                return '<li id="cite' + idx + '">' + chunks.join(" ") + ' <a class="citeback" href="#" data-cite-target="citeref' + idx + '">↑</a></li>';
             }).join("");
             html.push('<section class="citations"><h2>References</h2><ol>' + refs + "</ol></section>");
         }

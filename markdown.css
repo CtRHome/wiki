@@ -3,6 +3,13 @@
     border-bottom: 2px solid var(--softw) !important;
 }
 
+ol * {
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+}
+
+
 .paragraph {margin-bottom: 12px}
 .smalltext {
     font-size: 0.85em;
@@ -102,6 +109,10 @@
 .content code[class*="language-"] {
     background: transparent !important;
     text-shadow: none !important;
+}
+.content a {
+    overflow-wrap: anywhere;
+    word-break: break-all;
 }
 .content u {
     text-decoration-thickness: 2px;
@@ -222,12 +233,15 @@
 /*//////////////////////////////////////////////////////////////////////*/
 
 .externallinkwrap {
-    white-space: nowrap; display: inline-flex;
-    align-items: baseline; gap: 3px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    display: inline;
 }
 .externalicon {
     width: auto !important;
-    height: 1em; margin-left: 0;
+    height: 1em; margin-left: 2px;
     vertical-align: -0.1em;
+    display: inline-block;
     flex: 0 0 auto;
 }
