@@ -209,6 +209,7 @@
             return token;
         });
         var safe = escapehtml(neutralized);
+        safe = safe.replace(/&lt;\s*br\s*\/?\s*&gt;/gi, "<br>");
         safe = safe.split("\n").map(function (line) {
             if (/^\s*-#\s+/.test(line)) {
                 return '<span class="sizetextsmall">' + line.replace(/^\s*-#\s+/, "") + "</span>";
@@ -488,6 +489,7 @@
 
             if (!trimmed) {
                 closelist(); closequote();
+                // html.push('<p class="paragraph"><br></p>');
                 continue;
             }
 

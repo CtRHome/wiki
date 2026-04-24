@@ -9,7 +9,8 @@ See ``/articles/`` for the full list.
 <table>
   <tr valign="top">
     <td>
-      <b><a href="https://github.com/RadianceCascades">Bingies24</a></b><br>
+      <b><a href="https://github.com/Bingies24">Bingies24</a></b><br>
+      <b><a href="https://github.com/8SecondRocket">8 Second Rocket</a></b><br>
       <ul>
         <li>Feedback</li>
         <li>Pre-launch articles</li>
@@ -23,7 +24,7 @@ See ``/articles/`` for the full list.
       </ul>
     </td>
     <td>
-      <b><a href="https://github.com/octocat">𝓯𝓲𝓵𝓵 𝓶𝓮 𝓫𝓻𝓸..</a></b><br>
+      <b><a href="https://github.com/octocat">TODO</a></b><br>
       <ul>
         <li>lorem ipsum</li>
         <li>sit amet</li>
