@@ -174,13 +174,18 @@ document.addEventListener("DOMContentLoaded", function() {
         var edit = document.querySelector("a.edit");
         var viewhistory = document.querySelector("a.viewhistory");
         var pagehash = window.location.hash || "#Main_Page";
+        var hashname = normalizehash();
+        var iseditblocked = !!(window.WikiMarkdown && typeof window.WikiMarkdown.hasblockededitprefix === "function" && window.WikiMarkdown.hasblockededitprefix(hashname));
 
         if (pagetab) pagetab.href = pagehash;
         if (discussion) {
             var bodyurl = "https://github.com/CtRHome/wiki/blob/main/" + articlepath;
             discussion.href = "https://github.com/CtRHome/wiki/discussions/new?category=general&body=" + encodeURIComponent(bodyurl);
         }
-        if (edit) edit.href = "https://github.com/CtRHome/wiki/edit/main/" + articlepath;
+        if (edit) {
+            edit.href = "https://github.com/CtRHome/wiki/edit/main/" + articlepath;
+            edit.style.display = iseditblocked ? "none" : "";
+        }
         if (viewhistory) viewhistory.href = "https://github.com/CtRHome/wiki/commits/main/" + articlepath;
     }
 

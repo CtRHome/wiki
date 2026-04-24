@@ -29,7 +29,7 @@ caption: # Worm
 A villain
 ::
 
-Although the current *Cut the Rope* wiki on Fandom is an *exception* in some ways, its focus has still shifted almost entirely towards **[[Om Nom Stories]]**, catering to a younger userbase. As a result, it has become more of an "*Om Nom Wiki*" rather than an actual *Cut the Rope Wiki*. This site aims to finally create a hub for the real franchise, even if much smaller and nerdier.
+Although the current *Cut the Rope* wiki on Fandom is an *exception* in some ways, and does contain some important information about Cut the Rope, its focus has long shifted almost entirely towards **[[Om Nom Stories]]**, catering to a younger userbase. As a result, it has become more of an "*Om Nom Wiki*" rather than an actual *Cut the Rope Wiki*. This site aims to finally create a hub for the real franchise, even if much smaller and nerdier.
 
 > "Okay, but why not *anything* else in this case? Why GitHub?"
 

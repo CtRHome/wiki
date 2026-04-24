@@ -24,6 +24,7 @@
         js: true, mjs: true, cjs: true,
         vbs: true, wasm: true
     };
+    var reservedprefixes = ["special", "wiki"];
 
     var externallink = "/assets/images/icons/linkbluesmall.png";
     var activecitationrenderer = null;
@@ -634,6 +635,12 @@
 
         return { title: title, hashtitle: hashtitle, candidates: candidates };
     }
+    function hasblockededitprefix(hashval) {
+        var parts = String(hashval || "").split(":");
+        if (parts.length < 2) return false;
+        var prefix = String(parts[0] || "").trim().toLowerCase();
+        return reservedprefixes.indexOf(prefix) !== -1;
+    }
     async function fetchfirstexisting(paths) {
         for (var i = 0; i < paths.length; i++) {
             var resp = await fetch(paths[i]);
@@ -752,7 +759,7 @@
         markdowntohtml: markdowntohtml, renderarticle: renderarticle,
         normalizehash: normalizehash, displaytitlefrompagename: displaytitlefrompagename,
         getarticlecandidates: getarticlecandidates, fetchfirstexisting: fetchfirstexisting,
-        loadarticlefromhash: loadarticlefromhash
+        loadarticlefromhash: loadarticlefromhash, hasblockededitprefix: hasblockededitprefix
     };
 
     window.addEventListener("hashchange", loadarticlefromhash);
