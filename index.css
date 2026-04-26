@@ -137,7 +137,11 @@ h1, h2, h3, h4, h5, h6 {font-weight: 400}
     display: inline-flex; align-items: center;
     gap: 6px; white-space: nowrap; min-width: 0;
 }
+.tab.discussion {color: #b7b7b7}
 .tab.active {background: linear-gradient(to top, rgba(0,0,0,0.5), rgba(0,0,0,0));}
+.tab.discussionloading {color: #b7b7b7; pointer-events: none} /* probably redundant */
+.tab.discussionmissing {color: #ff9f9f}
+.tab.discussionfound {color: white}
 
 .search {
     color: #fff; background: var(--soft);

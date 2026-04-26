@@ -145,6 +145,11 @@ document.addEventListener("DOMContentLoaded", function() {
     /*//////////////////////////////////////////////////////////////////////*/
 
     // navigation tool links
+
+    var discussionapi = "https://discuss.w.candies.monster";
+    var discussionrequestid = 0;
+    var localdebug = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname); // this prevents request spamming for the sake of that daily 100k request limit
+
     function normalizehash() {
         var raw = window.location.hash ? window.location.hash.slice(1) : "Main_Page";
         if (!raw) raw = "Main_Page";
@@ -173,6 +178,54 @@ document.addEventListener("DOMContentLoaded", function() {
         return hasprefix ? (prefix + ":" + pretty) : pretty;
     }
 
+    function setdiscussionbutton(link, state, href) {
+        if (!link) return;
+        link.classList.remove("discussionload", "discussionmissing", "discussionfound");
+        if (state) link.classList.add(state);
+
+        if (href) {
+            link.href = href;
+            link.removeAttribute("aria-disabled");
+            link.tabIndex = 0;
+        } else {
+            link.removeAttribute("href");
+            link.setAttribute("aria-disabled", "true");
+            link.tabIndex = -1;
+        }
+    }
+
+    async function updatediscussionbutton(link, articletitle, fallbackurl) {
+        var requestid = ++discussionrequestid;
+        setdiscussionbutton(link, "discussionload");
+        link.dataset.discussionresulthref = "";
+        link.dataset.discussionload = "1";
+
+        var endpoint = discussionapi.replace(/\/$/, "") + "/" + encodeURIComponent(articletitle) + "?format=json";
+        try {
+            var response = await fetch(endpoint);
+            if (!response.ok) throw new Error("discussion api returned " + response.status);
+            var data = await response.json();
+            if (requestid !== discussionrequestid) return;
+
+            if (data && data.exists && data.discussionurl) {
+                link.dataset.discussionresulthref = data.discussionurl;
+                setdiscussionbutton(link, "discussionfound", data.discussionurl);
+                return;
+            }
+            var createurl = (data && data.createurl) ? data.createurl : fallbackurl;
+            link.dataset.discussionresulthref = createurl;
+            setdiscussionbutton(link, "discussionmissing", createurl);
+        } catch (_err) {
+            if (requestid !== discussionrequestid) return;
+            link.dataset.discussionresulthref = fallbackurl;
+            setdiscussionbutton(link, "discussionmissing", fallbackurl);
+        } finally {
+            if (requestid === discussionrequestid) {
+                link.dataset.discussionload = "0";
+            }
+        }
+    }
+
     function setactionlinks() {
         var articlepath = getarticlepathfromhash();
         var pagetab = document.querySelector("a.pagetab");
@@ -191,10 +244,15 @@ document.addEventListener("DOMContentLoaded", function() {
             var searchquery = "repo:CtRHome/wiki is:discussion in:title \"" + articletitle + "\"";
             var searchurl = "https://github.com/CtRHome/wiki/discussions?discussions_q=" + encodeURIComponent(searchquery);
 
-            discussion.href = newdiscussionurl;
-            discussion.dataset.discussionSearchUrl = searchurl;
-            discussion.dataset.discussionNewUrl = newdiscussionurl;
-            discussion.dataset.discussionTitle = articletitle;
+            // now i KNOW this doesn't make sense but trust the process
+            discussion.href = "";
+            discussion.dataset.discussionsearchlink = searchurl;
+            discussion.dataset.discussionnewlink = newdiscussionurl;
+            discussion.dataset.discussiontitle = articletitle;
+            discussion.dataset.discussionresulthref = "";
+            discussion.dataset.discussionload = "0";
+            setdiscussionbutton(discussion, "discussionload");
+            if (!localdebug) {updatediscussionbutton(discussion, articletitle, newdiscussionurl)}
         }
         if (edit) {
             edit.href = "https://github.com/CtRHome/wiki/edit/main/" + articlepath;
@@ -208,28 +266,25 @@ document.addEventListener("DOMContentLoaded", function() {
 
     var discussionlink = document.querySelector("a.discussion");
     if (discussionlink) {
-        discussionlink.addEventListener("click", async function(e) {
-            e.preventDefault();
+        var triggerdiscussioncheck = function() {
+            if (!localdebug) return;
+            if (discussionlink.dataset.discussionresulthref) return;
+            if (discussionlink.dataset.discussionload === "1") return;
 
-            var title = discussionlink.dataset.discussionTitle || getarticletitlefromhash();
-            var searchurl = discussionlink.dataset.discussionSearchUrl || "https://github.com/CtRHome/wiki/discussions";
-            var newdiscussionurl = discussionlink.dataset.discussionNewUrl || discussionlink.href;
-            var fallbackurl = newdiscussionurl || searchurl;
+            var title = discussionlink.dataset.discussiontitle || getarticletitlefromhash();
+            var fallbackurl = discussionlink.dataset.discussionnewlink || "";
+            if (!title) return;
+            updatediscussionbutton(discussionlink, title, fallbackurl);
+        };
 
-            try {
-                // uses search filters to check if a discussion for it already exists
-                var apiquery = "repo:CtRHome/wiki is:discussion in:title \"" + title + "\"";
-                var apiurl = "https://api.github.com/search/issues?q=" + encodeURIComponent(apiquery) + "&per_page=1";
-                var response = await fetch(apiurl, {headers: {"Accept": "application/vnd.github+json"}});
-                if (response.ok) {
-                    var data = await response.json();
-                    if (data && data.total_count > 0 && data.items && data.items[0] && data.items[0].html_url) {
-                        window.location.href = data.items[0].html_url;
-                        return;
-                    }
-                }
-            } catch (_err) {}
-            window.location.href = fallbackurl;
+        discussionlink.addEventListener("mouseenter", triggerdiscussioncheck);
+        discussionlink.addEventListener("focus", triggerdiscussioncheck);
+
+        discussionlink.addEventListener("click", function(e) {
+            var href = discussionlink.dataset.discussionresulthref || discussionlink.getAttribute("href");
+            if (!href) {
+                e.preventDefault();
+            }
         });
     }
 });
