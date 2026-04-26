@@ -11,7 +11,7 @@
         return decodeURIComponent(raw || "Main_Page");
     }
     function ispreviewhash() {
-        return normalizehash().replace(/\s+/g, "_") === previewhash.replace(/\s+/g, "_");
+        return normalizehash().replace(/_/g, " ").replace(/\s+/g, " ") === previewhash.replace(/_/g, " ").replace(/\s+/g, " ");
     }
     function getdraft() {
         return localStorage.getItem(storagekey) || "Start writing here...";
@@ -21,8 +21,8 @@
     }
     function getsuggestedfilename(markdown) {
         var match = String(markdown || "yourplaygroundarticle").match(/^\s*#\s+(.+)$/m);
-        var title = match ? match[1].trim() : "New_Article";
-        return title.replace(/[<>:"/\\|?*]+/g, "").replace(/\s+/g, "_") || "New_Article";
+        var title = match ? match[1].trim() : "New Article";
+        return title.replace(/[<>:"/\\|?*]+/g, "").replace(/_/g, " ").replace(/\s+/g, " ").trim() || "New Article";
     }
     function updatesubmithref() {
         if (!submittab || !textarea) return;

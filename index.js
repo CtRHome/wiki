@@ -47,18 +47,14 @@ document.addEventListener("DOMContentLoaded", function() {
         var hasprefix = parts.length > 1;
         var prefix = hasprefix ? parts[0].trim() : "";
         var body = hasprefix ? parts.slice(1).join(":").trim() : raw;
-        var slug = body.replace(/\s+/g, "_");
-        var spaced = slug.replace(/_/g, " ");
+        var spaced = body.replace(/_/g, " ").replace(/\s+/g, " ").trim();
         return hasprefix
             ? [
                 "articles/~" + prefix + "/" + spaced + ".md",
-                "articles/~" + prefix.toLowerCase() + "/" + spaced + ".md",
-                "articles/~" + prefix + "/" + slug + ".md",
-                "articles/~" + prefix.toLowerCase() + "/" + slug + ".md"
+                "articles/~" + prefix.toLowerCase() + "/" + spaced + ".md"
             ]
             : [
-                "articles/" + spaced + ".md",
-                "articles/" + slug + ".md"
+                "articles/" + spaced + ".md"
             ];
     }
     async function findexistingarticlepath(paths) {
@@ -76,8 +72,8 @@ document.addEventListener("DOMContentLoaded", function() {
         var hasprefix = parts.length > 1;
         var prefix = hasprefix ? parts[0].trim() : "";
         var body = hasprefix ? parts.slice(1).join(":").trim() : raw;
-        var slug = body.replace(/\s+/g, "_");
-        return hasprefix ? (prefix + ":" + slug) : slug;
+        var pagename = body.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+        return hasprefix ? (prefix + ":" + pagename) : pagename;
     }
     function gethashslug() {
         return window.location.hash ? window.location.hash.substring(1) : "Main_Page";
@@ -161,10 +157,10 @@ document.addEventListener("DOMContentLoaded", function() {
         var hasprefix = parts.length > 1;
         var prefix = hasprefix ? parts[0].trim() : "";
         var rawpage = hasprefix ? parts.slice(1).join(":").trim() : hash.trim();
-        var slug = rawpage.replace(/\s+/g, "_");
+        var pagename = rawpage.replace(/_/g, " ").replace(/\s+/g, " ").trim();
         return hasprefix
-            ? "articles/~" + prefix + "/" + slug + ".md"
-            : "articles/" + slug + ".md";
+            ? "articles/~" + prefix + "/" + pagename + ".md"
+            : "articles/" + pagename + ".md";
     }
 
     function getarticletitlefromhash() {

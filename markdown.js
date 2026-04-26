@@ -184,15 +184,15 @@
     /*//////////////////////////////////////////////////////////////////////*/
 
     function normalizehash() {
-        var raw = window.location.hash ? window.location.hash.slice(1) : "Main_Page";
-        if (!raw) raw = "Main_Page";
+        var raw = window.location.hash ? window.location.hash.slice(1) : "Main Page";
+        if (!raw) raw = "Main Page";
         return decodeURIComponent(raw.trim());
     }
     function displaytitlefrompagename(pagename) {
         return pagename.replace(/_/g, " ").trim() || "Untitled";
     }
     function wikilinktohash(target) {
-        return "#" + target.trim().replace(/\s+/g, "_");
+        return "#" + target.trim();
     }
 
     /*//////////////////////////////////////////////////////////////////////*/
@@ -618,20 +618,17 @@
         var hasprefix = parts.length > 1;
         var prefix = hasprefix ? parts[0].trim() : "";
         var raw = hasprefix ? parts.slice(1).join(":").trim() : hashval.trim();
-        var slug = raw.replace(/\s+/g, "_");
-        var spaced = slug.replace(/_/g, " ");
-        var title = displaytitlefrompagename(slug);
+        var pagename = raw.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+        var title = displaytitlefrompagename(pagename);
+        var spaced = pagename;
         var hashtitle = hasprefix ? (prefix + ":" + spaced) : spaced;
 
         var candidates = hasprefix
             ? [
-                "articles/~" + prefix + "/" + slug + ".md",
-                "articles/~" + prefix.toLowerCase() + "/" + slug + ".md",
                 "articles/~" + prefix + "/" + spaced + ".md",
                 "articles/~" + prefix.toLowerCase() + "/" + spaced + ".md"
             ]
             : [
-                "articles/" + slug + ".md",
                 "articles/" + spaced + ".md"
             ];
 
@@ -671,11 +668,11 @@
         return null;
     }
     function normalizedtargethash(target) {
-        return "#" + String(target || "").trim().replace(/\s+/g, "_");
+        return "#" + String(target || "").trim();
     }
     function redirectnotice(fromname) {
         var safe = escapehtml(String(fromname || "").replace(/_/g, " "));
-        var href = escapeattr("#" + String(fromname || "").trim().replace(/\s+/g, "_"));
+        var href = escapeattr("#" + String(fromname || "").trim());
         return '<p class="paragraph smalltext redirectnote">(Redirected from <a href="' + href + '">' + safe + "</a>)</p>";
     }
     function setpagetitle(hashtitle) {
@@ -740,7 +737,7 @@
             }
             if (!redirect.target) break;
             if (!redirectfrom) redirectfrom = currenthash;
-            var targethash = String(redirect.target).trim().replace(/\s+/g, "_");
+            var targethash = String(redirect.target).replace(/_/g, " ").replace(/\s+/g, " ").trim();
             if (!targethash || seen[targethash]) break;
             seen[targethash] = true;
             pendingredirectnotice = {target: targethash, from: redirectfrom};
