@@ -1,7 +1,6 @@
 ::infobox
 image: Bubble.png
 title: Bubble
-: -# Bubbles, as seen in the first four Cut the Rope Games.
 Appearances: [[Cut The Rope]], [[Cut The Rope: Holiday Gift]], [[Cut the Rope: Experiments]], [[Cut the Rope: Time Travel]], [[Cut the Rope: Magic]]
 Usage: Lifts objects after they get into the bubble.
 [[Physics Object?]]: No
