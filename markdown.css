@@ -1,6 +1,7 @@
-.title {
+.title, h1 {
     font-size: 2em; margin-bottom: 16px;
     border-bottom: 2px solid var(--softw) !important;
+    overflow: hidden;
 }
 
 ol * {
@@ -113,13 +114,17 @@ ol * {
     overflow-wrap: anywhere;
     word-break: break-all;
 }
+.content a.articlelink {color: rgba(210,215,220, 0.95)}
+.content a.articlelink.articlelinkexists {color: var(--a) !important}
+.content a.articlelink.articlelinkmissing {color: #ff8f8f !important}
+
 .content u {
     text-decoration-thickness: 2px;
     text-underline-offset: 2px;
 }
 .content hr {
     border: 0;
-    border-top: 2px dashed rgba(255,255,255,0.35);
+    border-top: 2px solid var(--softw) !important;
     margin: 14px 0;
 }
 
@@ -156,6 +161,7 @@ ol * {
 .infobox th {
     width: 38%;
     opacity: 0.95;
+    font-weight: inherit;
 }
 
 /* this is a different kind of infobox, for where issues occur like blacklisted filetypes */
@@ -228,6 +234,27 @@ ol * {
     image-rendering: auto;
 }
 .card p {margin: 0 0 8px}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.markdowntable {
+    width: 100%;
+    margin: 12px 0;
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.markdowntable th, .markdowntable td {
+    padding: 8px 10px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    text-align: left; font-weight: 300;
+    vertical-align: top;
+}
+.markdowntable thead th {
+    background: rgba(0,0,0,0.25);
+    border-top: 0;
+}
 
 /*//////////////////////////////////////////////////////////////////////*/
 

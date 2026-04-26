@@ -214,6 +214,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var discussionrequestid = 0;
     var randominprogress = false;
     var localdebug = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname); // this prevents request spamming for the sake of that daily 100k request limit
+    var pendinglasteditpath = "";
 
     function normalizehash() {
         var raw = window.location.hash ? window.location.hash.slice(1) : "Main_Page";
@@ -358,7 +359,14 @@ document.addEventListener("DOMContentLoaded", function() {
             edit.style.display = iseditblocked ? "none" : "";
         }
         if (viewhistory) viewhistory.href = "https://github.com/CtRHome/wiki/commits/main/" + articlepath;
-        updatelasteditedtext(articlepath);
+        if (localdebug) {
+            pendinglasteditpath = articlepath;
+            var footerlabel = document.querySelector(".lastedit");
+            if (footerlabel) footerlabel.textContent = "This page was last edited on... (hover to load)";
+        } else {
+            pendinglasteditpath = "";
+            updatelasteditedtext(articlepath);
+        }
     }
 
     setactionlinks();
@@ -367,7 +375,6 @@ document.addEventListener("DOMContentLoaded", function() {
     var discussionlink = document.querySelector("a.discussion");
     if (discussionlink) {
         var triggerdiscussioncheck = function() {
-            if (!localdebug) return;
             if (discussionlink.dataset.discussionresulthref) return;
             if (discussionlink.dataset.discussionload === "1") return;
 
@@ -377,15 +384,29 @@ document.addEventListener("DOMContentLoaded", function() {
             updatediscussionbutton(discussionlink, title, fallbackurl);
         };
 
-        discussionlink.addEventListener("mouseenter", triggerdiscussioncheck);
-        discussionlink.addEventListener("focus", triggerdiscussioncheck);
-
         discussionlink.addEventListener("click", function(e) {
+            if (localdebug && !discussionlink.dataset.discussionresulthref && discussionlink.dataset.discussionload !== "1") {
+                e.preventDefault();
+                triggerdiscussioncheck(); return;
+            }
             var href = discussionlink.dataset.discussionresulthref || discussionlink.getAttribute("href");
             if (!href) {
                 e.preventDefault();
             }
         });
+    }
+
+    var lasteditlabel = document.querySelector(".lastedit");
+    if (lasteditlabel) {
+        var triggermaybeupdatelastedit = function() {
+            if (!localdebug) return;
+            if (!pendinglasteditpath) return;
+            var path = pendinglasteditpath;
+            pendinglasteditpath = "";
+            updatelasteditedtext(path);
+        };
+        lasteditlabel.addEventListener("mouseenter", triggermaybeupdatelastedit);
+        lasteditlabel.addEventListener("focus", triggermaybeupdatelastedit);
     }
 });
 

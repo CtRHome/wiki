@@ -25,6 +25,8 @@
         vbs: true, wasm: true
     };
     var reservedprefixes = ["special", "wiki"];
+    var localdebug = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+    var treeapiurl = "https://api.github.com/repos/CtRHome/wiki/git/trees/main?recursive=1";
 
     var externallink = "assets/images/icons/linkbluesmall.png";
     var activecitationrenderer = null;
@@ -54,6 +56,34 @@
     }
     function makewikihref(target) {
         return wikilinktohash(target);
+    }
+    function normalizewikikey(target) {
+        var raw = String(target || "").trim();
+        if (!raw) return "";
+        var parts = raw.split(":");
+        var hasprefix = parts.length > 1;
+        var prefix = hasprefix ? parts[0].trim() : "";
+        var body = hasprefix ? parts.slice(1).join(":").trim() : raw;
+        var page = body.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+        if (!page) return "";
+        return hasprefix ? (prefix.toLowerCase() + ":" + page) : page;
+    }
+    function getarticlecandidatesfromtarget(target) {
+        var raw = String(target || "").trim();
+        var parts = raw.split(":");
+        var hasprefix = parts.length > 1;
+        var prefix = hasprefix ? parts[0].trim() : "";
+        var body = hasprefix ? parts.slice(1).join(":").trim() : raw;
+        var spaced = body.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+        if (!spaced) return [];
+        return hasprefix
+            ? [
+                "articles/~" + prefix + "/" + spaced + ".md",
+                "articles/~" + prefix.toLowerCase() + "/" + spaced + ".md"
+            ]
+            : [
+                "articles/" + spaced + ".md"
+            ];
     }
     function isallowedhost(hostname) {
         var lower = String(hostname || "").toLowerCase();
@@ -236,11 +266,13 @@
             .replace(/~([^~]+)~/g, "<del>$1</del>")
             // article links with a custom label
             .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, function (_, t, l) {
-                return '<a href="' + escapeattr(makewikihref(t)) + '">' + l + "</a>";
+                var key = normalizewikikey(t);
+                return '<a class="articlelink" data-wikilink-target="' + escapeattr(t) + '" data-wikilink-key="' + escapeattr(key) + '" href="' + escapeattr(makewikihref(t)) + '">' + l + "</a>";
             })
             // article links
             .replace(/\[\[([^\]]+)\]\]/g, function (_, t) {
-                return '<a href="' + escapeattr(makewikihref(t)) + '">' + t.replace(/_/g, " ") + "</a>";
+                var key = normalizewikikey(t);
+                return '<a class="articlelink" data-wikilink-target="' + escapeattr(t) + '" data-wikilink-key="' + escapeattr(key) + '" href="' + escapeattr(makewikihref(t)) + '">' + t.replace(/_/g, " ") + "</a>";
             })
             // external links
             .replace(/\[([^\]]+)\]\(((?:[^()\s]+|\([^()]*\))+)\)/g, function (_, label, href) {
@@ -395,6 +427,112 @@
 
     /*//////////////////////////////////////////////////////////////////////*/
 
+    // big chunk to check for existence of articles. 
+    /* do note that it too is also subject to the localdebug thing so 
+       you'll need to click to request github (to prevent spam on live preview again) */
+    var articleindexcache = null;
+    var articleindexpending = null;
+    var linkstatusbykey = {};
+    var linkstatusinitbound = false;
+
+    async function fetcharticleindex() {
+        if (articleindexcache) return articleindexcache;
+        if (articleindexpending) return articleindexpending;
+        articleindexpending = fetch(treeapiurl, {
+            headers: {
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "Om Nom"
+            }
+        }).then(function (response) {
+            if (!response.ok) throw new Error("github tree api returned " + response.status);
+            return response.json();
+        }).then(function (data) {
+            var tree = Array.isArray(data && data.tree) ? data.tree : [];
+            var set = new Set();
+            tree.forEach(function (entry) {
+                if (!entry || entry.type !== "blob" || typeof entry.path !== "string") return;
+                if (!/^articles\/.+\.md$/i.test(entry.path)) return;
+
+                var matchpref = entry.path.match(/^articles\/~([^/]+)\/(.+)\.md$/i);
+                if (matchpref) {
+                    var key = matchpref[1].toLowerCase() + ":" + matchpref[2].replace(/_/g, " ").replace(/\s+/g, " ").trim();
+                    if (key) set.add(key);
+                    return;
+                }
+                var matchplain = entry.path.match(/^articles\/(.+)\.md$/i);
+                if (matchplain) {
+                    var plainkey = matchplain[1].replace(/_/g, " ").replace(/\s+/g, " ").trim();
+                    if (plainkey) set.add(plainkey);
+                }
+            });
+            articleindexcache = set;
+            articleindexpending = null;
+            return set;
+        }).catch(function (err) {
+            articleindexpending = null;
+            throw err;
+        });
+        return articleindexpending;
+    }
+
+    async function resolvewikilinkstatus(target, key) {
+        var cachekey = String(key || "");
+        if (cachekey && linkstatusbykey[cachekey]) return linkstatusbykey[cachekey];
+
+        var candidates = getarticlecandidatesfromtarget(target);
+        if (!candidates.length) return "missing";
+
+        try {
+            var index = await fetcharticleindex();
+            var exists = candidates.some(function (path) {
+                var pref = path.match(/^articles\/~([^/]+)\/(.+)\.md$/i);
+                if (pref) {
+                    var prefkey = pref[1].toLowerCase() + ":" + pref[2].replace(/_/g, " ").replace(/\s+/g, " ").trim();
+                    return index.has(prefkey);
+                }
+                var plain = path.match(/^articles\/(.+)\.md$/i);
+                if (!plain) return false;
+                var plainkey = plain[1].replace(/_/g, " ").replace(/\s+/g, " ").trim();
+                return index.has(plainkey);
+            });
+            var status = exists ? "exists" : "missing";
+            if (cachekey) linkstatusbykey[cachekey] = status;
+            return status;
+        } catch (_err) {
+            return "";
+        }
+    }
+
+    function applywikilinkstatus(link, status) {
+        link.classList.remove("articlelinkexists", "articlelinkmissing");
+        if (status === "exists") link.classList.add("articlelinkexists");
+        if (status === "missing") link.classList.add("articlelinkmissing");
+    }
+
+    async function updateallarticlelinkstates(scope) {
+        var links = scope.querySelectorAll("a.articlelink[data-wikilink-target]");
+        for (var i = 0; i < links.length; i++) {
+            var link = links[i];
+            var target = link.dataset.wikilinkTarget || "";
+            var key = link.dataset.wikilinkKey || normalizewikikey(target);
+            if (!target) continue;
+            var status = await resolvewikilinkstatus(target, key);
+            if (status) applywikilinkstatus(link, status);
+        }
+    }
+
+    function bindlocaldebuglinktrigger(scope) {
+        if (!localdebug || linkstatusinitbound) return;
+        if (!scope) return;
+        linkstatusinitbound = true;
+        var trigger = function () {
+            updateallarticlelinkstates(scope);
+            scope.removeEventListener("click", trigger);
+        }; scope.addEventListener("click", trigger);
+    }
+
+    /*//////////////////////////////////////////////////////////////////////*/
+
     function markdowntohtml(md) {
         activecitationrenderer = null;
         var cleanmd = String(md || "")
@@ -402,9 +540,9 @@
             .replace(/<!--[\s\S]*?-->/g, "");
         var lines = cleanmd.split("\n");
         var html = []; var inlist = false;
+        var intable = false; var currenttable = null;
         var inblockquote = false;
-        var citationsbyid = {};
-        var citationorder = [];
+        var citationsbyid = {}; var citationorder = [];
         var citationdefs = {};
 
         function escid(id) {
@@ -477,6 +615,42 @@
                 inblockquote = false;
             }
         }
+        function splitrowcells(line) {
+            var trimmed = String(line || "").trim();
+            if (!trimmed) return [];
+            var row = trimmed;
+            if (row[0] === "|") row = row.slice(1);
+            if (row[row.length - 1] === "|") row = row.slice(0, -1);
+            return row.split("|").map(function (cell) {
+                return cell.trim();
+            });
+        }
+        function alignfromcell(cell) {
+            var source = String(cell || "").trim();
+            if (!/^:?-{3,}:?$/.test(source)) return "";
+            var starts = source[0] === ":";
+            var ends = source[source.length - 1] === ":";
+            if (starts && ends) return "center";
+            if (ends) return "right";
+            if (starts) return "left";
+            return "";
+        }
+        function closetable() {
+            if (!intable || !currenttable) return;
+            var head = "<thead><tr>" + currenttable.headers.map(function (cell, idx) {
+                var align = currenttable.aligns[idx] ? ' style="text-align:' + currenttable.aligns[idx] + '"' : "";
+                return "<th" + align + ">" + inlinewithcites(cell) + "</th>";
+            }).join("") + "</tr></thead>";
+            var body = "<tbody>" + currenttable.rows.map(function (row) {
+                return "<tr>" + row.map(function (cell, idx) {
+                    var align = currenttable.aligns[idx] ? ' style="text-align:' + currenttable.aligns[idx] + '"' : "";
+                    return "<td" + align + ">" + inlinewithcites(cell) + "</td>";
+                }).join("") + "</tr>";
+            }).join("") + "</tbody>";
+            html.push('<table class="markdowntable">' + head + body + "</table>");
+            intable = false;
+            currenttable = null;
+        }
 
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i];
@@ -488,13 +662,14 @@
             var trimmed = line.trim();
 
             if (!trimmed) {
-                closelist(); closequote();
+                closelist(); closequote(); closetable();
                 // html.push('<p class="paragraph"><br></p>');
                 continue;
             }
 
             var citedef = trimmed.match(/^\[\^([^\]]+)\]:\s*(.*)$/);
             if (citedef) {
+                closetable();
                 var citeid = String(citedef[1] || "").trim();
                 if (citeid) citationdefs[citeid] = parsecitationdefinition(citedef[2] || "");
                 continue;
@@ -505,7 +680,7 @@
             // code
             // ```
             if (/^```/.test(trimmed)) {
-                closelist(); closequote();
+                closelist(); closequote(); closetable();
 
                 var lang = (trimmed.slice(3).trim().toLowerCase() || "txt").replace(/[^a-z0-9_-]/g, "");
                 var codelines = [];
@@ -524,7 +699,7 @@
 
             // ::infobox / ::media / ::card
             if (trimmed.startsWith("::")) {
-                closelist(); closequote();
+                closelist(); closequote(); closetable();
 
                 var directiveheader = trimmed.slice(2).trim().toLowerCase();
                 var parts = directiveheader.split(/\s+/).filter(Boolean);
@@ -539,21 +714,49 @@
             // headings
             var heading = trimmed.match(/^(#{1,6})\s+(.+)$/);
             if (heading) {
-                closelist(); closequote();
+                closelist(); closequote(); closetable();
                 var lvl = heading[1].length;
                 html.push("<h" + lvl + ">" + inlinewithcites(heading[2]) + "</h" + lvl + ">"); continue;
             }
 
             // separators
             if (/^---+$/.test(trimmed)) {
-                closelist(); closequote();
+                closelist(); closequote(); closetable();
                 html.push("<hr>");
                 continue;
             }
 
+            if (trimmed.indexOf("|") !== -1) {
+                var nextline = i + 1 < lines.length ? lines[i + 1].trim() : "";
+                if (!intable && nextline.indexOf("|") !== -1) {
+                    var headercells = splitrowcells(trimmed);
+                    var separatorcells = splitrowcells(nextline);
+                    var canstarttable = headercells.length > 0 &&
+                        separatorcells.length === headercells.length &&
+                        separatorcells.every(function (cell) { return /^:?-{3,}:?$/.test(cell); });
+                    if (canstarttable) {
+                        closelist(); closequote();
+                        closetable();
+                        intable = true;
+                        currenttable = {
+                            headers: headercells,
+                            aligns: separatorcells.map(alignfromcell),
+                            rows: []
+                        }; i++; continue;
+                    }
+                } else if (intable) {
+                    var datacells = splitrowcells(trimmed);
+                    if (datacells.length === currenttable.headers.length) {
+                        currenttable.rows.push(datacells);
+                        continue;
+                    }
+                    closetable();
+                }
+            } else if (intable) {closetable()}
+
             // bullet point list
             if (/^[-*]\s+/.test(trimmed)) {
-                closequote();
+                closequote(); closetable();
                 if (!inlist) {
                     html.push('<ul class="articlelist">');
                     inlist = true;
@@ -566,6 +769,7 @@
             var quote = trimmed.match(/^>\s?(.*)$/);
             if (quote) {
                 closelist();
+                closetable();
                 if (!inblockquote) {
                     html.push('<blockquote class="quote">');
                     inblockquote = true;
@@ -578,13 +782,14 @@
             if (/^-#\s+/.test(trimmed)) {
                 closelist();
                 closequote();
+                closetable();
                 html.push('<p class="paragraph smalltext">' + inlinewithcites(trimmed.replace(/^-#\s+/, "")) + "</p>");
                 continue;
             }
-            closelist(); closequote();
+            closelist(); closequote(); closetable();
             html.push('<p class="paragraph">' + inlinewithcites(trimmed) + "</p>");
         }
-        closelist(); closequote();
+        closelist(); closequote(); closetable();
         if (citationorder.length) {
             var refs = citationorder.map(function (id) {
                 var def = citationdefs[id] || { desc: "", links: [] };
@@ -690,6 +895,10 @@
             window.Prism.highlightAllUnder(contentroot);
         }
         bindexpandableimages(contentroot);
+        bindlocaldebuglinktrigger(contentroot);
+        if (!localdebug) {
+            updateallarticlelinkstates(contentroot);
+        }
         var citeanchors = contentroot.querySelectorAll("[data-cite-target]");
         citeanchors.forEach(function (anchor) {
             anchor.addEventListener("click", function (e) {
