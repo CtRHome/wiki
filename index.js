@@ -22,6 +22,11 @@ if (logo) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+    
+    document.addEventListener("dragstart", function(e) {
+        if (e.target && e.target.tagName === "IMG") {e.preventDefault()}
+    });
+
     var fandombadge = document.querySelector(".fandombadge");
     if (fandombadge) {
         var fandombadgehiddenkey = "hidefandombadge";

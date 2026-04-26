@@ -422,6 +422,24 @@
                 "</section>"
             );
         }
+
+        // ::msg
+        if (name === "msg") {
+            var msgkindraw = String(data.kind || "message").trim().toLowerCase();
+            var msgkind = msgkindraw.replace(/[^a-z0-9_-]/g, "") || "message";
+            var msglabel = msgkind.charAt(0).toUpperCase() + msgkind.slice(1) + ":";
+            var msgicon = "assets/images/msg/" + msgkind + ".png";
+            var msgbody = data.message ? parseinline(data.message) : "";
+            return (
+                '<section class="msg msg-' + escapeattr(msgkind) + '">' +
+                '<img class="msgicon" src="' + escapeattr(msgicon) + '" alt="">' +
+                '<div class="msgcontent">' +
+                '<p class="msglabel"><strong>' + escapehtml(msglabel) + "</strong></p>" +
+                (msgbody ? '<p class="msgtext">' + msgbody + "</p>" : "") +
+                "</div>" +
+                "</section>"
+            );
+        }
         return "";
     }
 
@@ -698,15 +716,19 @@
             }
 
             // ::infobox / ::media / ::card
-            if (trimmed.startsWith("::")) {
+            if (/^:+\s*[a-z]/i.test(trimmed)) {
                 closelist(); closequote(); closetable();
 
-                var directiveheader = trimmed.slice(2).trim().toLowerCase();
+                var directiveheader = trimmed.replace(/^:+\s*/, "").trim().toLowerCase();
                 var parts = directiveheader.split(/\s+/).filter(Boolean);
                 var dir = parts[0] || "";
+                if (!dir) {
+                    html.push('<p class="paragraph">' + inlinewithcites(trimmed) + "</p>");
+                    continue;
+                }
                 var args = parts.slice(1);
                 var block = []; i++;
-                while (i < lines.length && lines[i].trim() !== "::") block.push(lines[i++]);
+                while (i < lines.length && !/^::+\s*$/.test(lines[i].trim())) block.push(lines[i++]);
                 html.push(parsedirectiveblock(dir, args, block));
                 continue;
             }

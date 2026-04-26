@@ -81,7 +81,7 @@ h1, h2, h3, h4, h5, h6 {font-weight: 400}
 .sidebar {
     background: var(--soft);
     border-radius: 0 0 22px 22px; padding: 10px 14px 16px;
-    align-self: start; 
+    align-self: start; user-select: none;
     cursor: url("assets/static/cursors/active.cur"), default !important;
 }
 .shortlink, .link {
@@ -119,7 +119,7 @@ h1, h2, h3, h4, h5, h6 {font-weight: 400}
     display: flex; gap: 10px;
     align-items: flex-end;
     margin-bottom: 0; min-width: 0;
-    flex-wrap: nowrap;
+    flex-wrap: nowrap; user-select: none;
 }
 
 .tabs {
@@ -148,7 +148,7 @@ h1, h2, h3, h4, h5, h6 {font-weight: 400}
     flex: 0 1 380px; padding: 10px; border: 0;
     border-radius: 20px 20px 0 0;
     font: inherit; text-shadow: var(--stroke);
-    margin-left: auto;
+    margin-left: auto; user-select: none;
 }
 .search:focus {
     outline: none;
@@ -265,7 +265,7 @@ h1, h2, h3, h4, h5, h6 {font-weight: 400}
 
 .footer {
     margin-top: 26px; width: 100%; font-size: 0.95em;
-    display: grid; align-items: end;
+    display: grid; align-items: end; user-select: none;
     grid-template-columns: 1fr auto;
     column-gap: 16px; row-gap: 8px;
 }

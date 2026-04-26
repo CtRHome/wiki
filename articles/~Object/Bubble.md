@@ -1,3 +1,5 @@
+-# For the bubble equivalent in [[Cut the Rope 2]], see *[[Balloon]]*.
+
 ::infobox
 image: Bubble.png
 title: Bubble
@@ -6,7 +8,6 @@ Usage: Lifts objects after they get into the bubble.
 [[Physics Object?]]: No
 ::
 
-> For the bubble equivalent in [[Cut the Rope 2]], see ***[[Balloon]]***.
 
 **Bubbles** are [[Object]]s present throughout most games in the *[[Cut the Rope (franchise)|Cut the Rope Franchise]]*. In all of their appearances, they are able to lift the [[Candy]] and other small [[Physics Object]]s once they get into the bubble. Bubbles with objects inside can be popped by pressing on them.
 
@@ -31,7 +32,11 @@ Bubbles appear in *Cut the Rope: Experiments* in Level [[1-3 (Cut the Rope: Expe
 Bubbles appear in *Cut the Rope: Time Travel*. While they behave exactly the same as in previous games, they can now absorb new [[Physics Objects]] introduced in the game, those being the [[Chainsaw]], [[Bomb]] and [[Disco Ball]].
 
 ## In *[[Cut the Rope: Magic]]*
-> **TODO:** Add max size for circular log to still be able to enter a bubble
+::msg
+kind: todo
+message: Add max size for circular log to still be able to enter a bubble.
+::
+
 After an absence in the [[Cut the Rope 2|previous entry in the franchise]], Bubbles return in *Cut the Rope Magic*, having different physics and a new sprite stylized for the game. They first appear in [[2-4 (Cut the Rope: Magic)|2-4]]. Much like previously, they provide the ability to lift objects, not only Candy but also Circular [[Wood]] pieces and [[Shape Potion]]s. Their impulse/friction is similar to the one from the PC version of [[Cut The Rope]].
 
 # Syntaxes & Attributes

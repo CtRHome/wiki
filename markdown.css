@@ -110,10 +110,10 @@ ol * {
     background: transparent !important;
     text-shadow: none !important;
 }
-.content a {
+/* .content a {
     overflow-wrap: anywhere;
     word-break: break-all;
-}
+} */
 .content a.articlelink {color: rgba(210,215,220, 0.95)}
 .content a.articlelink.articlelinkexists {color: var(--a) !important}
 .content a.articlelink.articlelinkmissing {color: #ff8f8f !important}
@@ -234,6 +234,23 @@ ol * {
     image-rendering: auto;
 }
 .card p {margin: 0 0 8px}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
+.msg {
+    margin: 16px 0; gap: 10px;
+    display: flex; align-items: center;
+    background: rgba(0,0,0,0.25);
+    border-radius: 10px; padding: 10px;
+}
+.msgicon {
+    width: 64px; height: 64px;
+    object-fit: contain;
+    flex: 0 0 24px;
+}
+.msgcontent {min-width: 0}
+.msglabel {margin: 0 0 6px}
+.msgtext {margin: 0}
 
 /*//////////////////////////////////////////////////////////////////////*/
 
