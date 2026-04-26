@@ -20,7 +20,15 @@ See ``/articles/`` for the full list.
       <b><a href="https://github.com/sogful">cv</a></b><br>
       <ul>
         <li>Initial design</li>
-        <li>Bad coding</li>
+        <li>Static + worker code</li>
+      </ul>
+    </td>
+    <td>
+      <b><a href="https://github.com/AdrianDrummis">AdrianDrummis</a></b><br>
+      <b><a href="https://github.com/TheAwesomeBlue">TheAwesomeBlue</a></b><br>
+      <ul>
+        <li>Repository</li>
+        <li>Additional help</li>
       </ul>
     </td>
     <td>
