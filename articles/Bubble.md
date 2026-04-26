@@ -40,11 +40,11 @@ Taken from the Cut the Rope Level XMLs:
 
 | Name | Type | Description |
 | -------- | ------- | :------- |
-| `bubble` | Object | Object tag name. |
+| `bubble` | Name | Object tag name. |
 | `x` | Integer | X position attribute. (Positive X is right.) |
 | `y` | Integer | Y position attribute. (Positive Y is down.) |
 
-Example: `<bubble x="13" y="267" />` will put a Bubble in a level at coordinates X: 13 and Y: 267 (counting from the top left corner from the screen.
+Example: `<bubble x="13" y="267" />` will put a bubble in a level at coordinates X: 13 and Y: 267 (counting from the top left corner from the screen).
 
 # Trivia
 - Bubbles are the first gameplay element introduced after the basic four ([[Rope]]s, [[Candy]], [[Omnom]], [[Star]]) in all games except for [[Cut the Rope: Magic]].
