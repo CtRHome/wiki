@@ -210,7 +210,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // navigation tool links
     var discussionapi = "https://discuss.w.candies.monster";
+    var randomapi = "https://random.w.candies.monster?format=json";
     var discussionrequestid = 0;
+    var randominprogress = false;
     var localdebug = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname); // this prevents request spamming for the sake of that daily 100k request limit
 
     function normalizehash() {
@@ -241,6 +243,33 @@ document.addEventListener("DOMContentLoaded", function() {
         var rawpage = hasprefix ? parts.slice(1).join(":").trim() : hash.trim();
         var pretty = rawpage.replace(/_/g, " ");
         return hasprefix ? (prefix + ":" + pretty) : pretty;
+    }
+
+    async function mayberedirectrandompage() {
+        if (normalizehash() !== "Special:Random Page") return false;
+        if (randominprogress) return true;
+        randominprogress = true;
+
+        try {
+            var response = await fetch(randomapi, {headers: {"Accept": "application/json"}});
+            if (!response.ok) throw new Error("random api returned " + response.status);
+            var payload = await response.json();
+
+            if (payload && typeof payload.hash === "string" && payload.hash.trim()) {
+                window.location.hash = "#" + payload.hash.trim();
+                return true;
+            }
+            if (payload && typeof payload.url === "string" && payload.url.trim()) {
+                window.location.href = payload.url.trim();
+                return true;
+            }
+            throw new Error("random api did not include hash/url..");
+        } catch (_err) {
+            window.location.href = "https://random.w.candies.monster";
+            return true;
+        } finally {
+            randominprogress = false;
+        }
     }
 
     function setdiscussionbutton(link, state, href) {
@@ -292,6 +321,11 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function setactionlinks() {
+        if (normalizehash() === "Special:Random Page") {
+            mayberedirectrandompage();
+            return;
+        }
+
         var articlepath = getarticlepathfromhash();
         var pagetab = document.querySelector("a.pagetab");
         var discussion = document.querySelector("a.discussion");
