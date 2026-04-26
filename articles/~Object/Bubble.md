@@ -1,7 +1,7 @@
 -# For the bubble equivalent in [[Cut the Rope 2]], see *[[Balloon]]*.
 
 ::infobox
-image: articles/Media/Object/Bubble.png
+image: articles/Media/Object/Bubble_CTR_iOS.png
 title: Bubble
 Appearances: [[Cut The Rope]], [[Cut The Rope: Holiday Gift]], [[Cut the Rope: Experiments]], [[Cut the Rope: Time Travel]], [[Cut the Rope: Magic]]
 Usage: Lifts objects after they get into the bubble.
