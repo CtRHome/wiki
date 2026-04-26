@@ -7,7 +7,7 @@ Members from the [Cut the Rope Home Organization](https://github.com/ctrh-org) a
 - Set a proper name for your article — it will be the same as the filename, except with all underscores (`_`) swapped for spaces (` `).
   - You can also add the file to a subfolder by starting with a tilde.
 - Use short sections and proper headings. It's best if you don't make them *too* short, however...
-- Upload article files to `/articles/Media/` (you can create subfolders there, like `/objects/`, for organizing!) 
+- Upload article files to `articles/Media/` (you can create subfolders there, like `/objects/`, for organizing!) 
   - OR upload them to a [whitelisted](https://github.com/CtRHome/wiki/blob/main/markdown.js#L8) external source. 
   - The variable right below ⬑ `hostwhitelist` also indicates which filetypes will outright refuse to be shown on the wiki. It might change over time due to demand.
 - Use `\` to escape markdown conversions if you need literal characters.

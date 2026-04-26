@@ -102,7 +102,7 @@
         var val = String(rawurl || "").trim();
         if (!val) return val;
         if (/^(https?:|data:|javascript:|\/\/|\/|#|\.\/|\.\.\/)/i.test(val)) return val;
-        if (val.indexOf("/") === -1) return "/articles/media/" + val;
+        if (val.indexOf("/") === -1) return "articles/media/" + val;
         return val;
     }
     function sanitizehref(rawhref) {
