@@ -167,6 +167,16 @@ document.addEventListener("DOMContentLoaded", function() {
             : "articles/" + slug + ".md";
     }
 
+    function getarticletitlefromhash() {
+        var hash = normalizehash();
+        var parts = hash.split(":");
+        var hasprefix = parts.length > 1;
+        var prefix = hasprefix ? parts[0].trim() : "";
+        var rawpage = hasprefix ? parts.slice(1).join(":").trim() : hash.trim();
+        var pretty = rawpage.replace(/_/g, " ");
+        return hasprefix ? (prefix + ":" + pretty) : pretty;
+    }
+
     function setactionlinks() {
         var articlepath = getarticlepathfromhash();
         var pagetab = document.querySelector("a.pagetab");
@@ -175,12 +185,20 @@ document.addEventListener("DOMContentLoaded", function() {
         var viewhistory = document.querySelector("a.viewhistory");
         var pagehash = window.location.hash || "#Main_Page";
         var hashname = normalizehash();
+        var articletitle = getarticletitlefromhash();
         var iseditblocked = !!(window.WikiMarkdown && typeof window.WikiMarkdown.hasblockededitprefix === "function" && window.WikiMarkdown.hasblockededitprefix(hashname));
 
         if (pagetab) pagetab.href = pagehash;
         if (discussion) {
             var bodyurl = "https://github.com/CtRHome/wiki/blob/main/" + articlepath;
-            discussion.href = "https://github.com/CtRHome/wiki/discussions/new?category=general&body=" + encodeURIComponent(bodyurl);
+            var newdiscussionurl = "https://github.com/CtRHome/wiki/discussions/new?category=general&title=" + encodeURIComponent(articletitle) + "&body=" + encodeURIComponent(bodyurl);
+            var searchquery = "repo:CtRHome/wiki is:discussion in:title \"" + articletitle + "\"";
+            var searchurl = "https://github.com/CtRHome/wiki/discussions?discussions_q=" + encodeURIComponent(searchquery);
+
+            discussion.href = newdiscussionurl;
+            discussion.dataset.discussionSearchUrl = searchurl;
+            discussion.dataset.discussionNewUrl = newdiscussionurl;
+            discussion.dataset.discussionTitle = articletitle;
         }
         if (edit) {
             edit.href = "https://github.com/CtRHome/wiki/edit/main/" + articlepath;
@@ -191,6 +209,33 @@ document.addEventListener("DOMContentLoaded", function() {
 
     setactionlinks();
     window.addEventListener("hashchange", setactionlinks);
+
+    var discussionlink = document.querySelector("a.discussion");
+    if (discussionlink) {
+        discussionlink.addEventListener("click", async function(e) {
+            e.preventDefault();
+
+            var title = discussionlink.dataset.discussionTitle || getarticletitlefromhash();
+            var searchurl = discussionlink.dataset.discussionSearchUrl || "https://github.com/CtRHome/wiki/discussions";
+            var newdiscussionurl = discussionlink.dataset.discussionNewUrl || discussionlink.href;
+            var fallbackurl = newdiscussionurl || searchurl;
+
+            try {
+                // uses search filters to check if a discussion for it already exists
+                var apiquery = "repo:CtRHome/wiki is:discussion in:title \"" + title + "\"";
+                var apiurl = "https://api.github.com/search/issues?q=" + encodeURIComponent(apiquery) + "&per_page=1";
+                var response = await fetch(apiurl, {headers: {"Accept": "application/vnd.github+json"}});
+                if (response.ok) {
+                    var data = await response.json();
+                    if (data && data.total_count > 0 && data.items && data.items[0] && data.items[0].html_url) {
+                        window.location.href = data.items[0].html_url;
+                        return;
+                    }
+                }
+            } catch (_err) {}
+            window.location.href = fallbackurl;
+        });
+    }
 });
 
 /*//////////////////////////////////////////////////////////////////////*/
