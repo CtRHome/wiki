@@ -3,7 +3,7 @@ image: Bubble.png
 title: Bubble
 Appearances: [[Cut The Rope]], [[Cut The Rope: Holiday Gift]], [[Cut the Rope: Experiments]], [[Cut the Rope: Time Travel]], [[Cut the Rope: Magic]]
 Usage: Lifts objects after they get into the bubble.
-[[Physics Object?]]: No
+[[Physics Object|Is a Physics Object?]]: No
 ::
 
 > For the bubble equivalent in [[Cut the Rope 2]], see ***[[Balloon]]***.
