@@ -74,11 +74,11 @@ url: https://github.com/CtRHome/CutTheRope-WindowsDecomp/raw/refs/heads/main/Cut
 caption: You usually won't be able to see this caption
 ::
 
-| Thing | Meaning | Notes |
-|:---|:---|---:|
-| `[[Wiki link]]` | link to another article | supports `[[Target|Custom text]]` |
-| `[^id]` | citation reference | define `[^id]: desc ｜ https://example.com` |
-| `::media` | embed a file | local files default to `articles/Media/` |
+| Thingamabob | Meaningabob | Notabob | Spongebob
+|:---|:---|---:|---:|
+| `[[Wiki link]]` | link to another article | supports `[[Target|Custom text]]` | I'm Spongebob! |
+| `[^id]` | citation reference | define `[^id]: desc | https://example.com` | I'm Spongebob! |
+| `::media` | embed a file | local files default to `articles/Media/` | I'm Spongebob! |
 
 :::msg
 kind: todo

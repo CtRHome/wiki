@@ -329,13 +329,33 @@
             return token;
         });
 
+        // REALLY overkill logic to try and ignore markdown inside code blocks/monospace text.
+        // that's how the table in Special:Test doesn't crumble from the pipes and squared brackets
+        // ..this took a ton of testing..
         var codespans = [];
-        neutralized = neutralized.replace(/``([^`]+)``|`([^`]+)`/g, function (_m, dbl, sng) {
-            var content = typeof dbl === "string" && dbl !== "" ? dbl : (typeof sng === "string" ? sng : "");
-            var token = "%%code" + codespans.length + "%%";
-            codespans.push(content);
-            return token;
-        });
+        (function () {
+            var out = "";
+            var s = String(neutralized || "");
+            var i = 0;
+            while (i < s.length) {
+                var ch = s[i];
+                if (ch !== "`") {out += ch; i++; continue}
+
+                var run = 1;
+                while (i + run < s.length && s[i + run] === "`") run++;
+                var delim = s.slice(i, i + run);
+                var start = i + run;
+                var end = s.indexOf(delim, start);
+                if (end === -1) {out += ch; i++; continue}
+
+                var content = s.slice(start, end);
+                var token = "%%code" + codespans.length + "%%";
+                codespans.push(content);
+                out += token;
+                i = end + run;
+            }
+            neutralized = out;
+        })();
 
         var safe = escapehtml(neutralized);
         safe = safe.replace(/&lt;\s*br\s*\/?\s*&gt;/gi, "<br>");
@@ -692,11 +712,33 @@
         }
         function extractinlinedefinition(line) {
             var source = String(line || "");
+            function isinsideinlinecode(text, pos) {
+                var incode = false; var codedelim = 0;
+                for (var i = 0; i < pos; i++) {
+                    if (text[i] !== "`") continue;
+                    if (i > 0 && text[i - 1] === "\\") continue;
+                    var run = 1;
+                    while (i + run < pos && text[i + run] === "`") run++;
+                    if (!incode) {
+                        incode = true;
+                        codedelim = run;
+                    } else if (run >= codedelim) {
+                        incode = false;
+                        codedelim = 0;
+                    }
+                    i += run - 1;
+                }
+                return incode;
+            }
             var start = 0;
             while (true) {
                 var idx = source.indexOf("[^", start);
                 if (idx === -1) return { text: source, id: "", def: "" };
                 if (idx > 0 && source[idx - 1] === "\\") {
+                    start = idx + 2;
+                    continue;
+                }
+                if (isinsideinlinecode(source, idx)) {
                     start = idx + 2;
                     continue;
                 }
@@ -734,15 +776,44 @@
                 inblockquote = false;
             }
         }
-        function splitrowcells(line) {
+        function splitrowcells(line, maxcells) {
             var trimmed = String(line || "").trim();
             if (!trimmed) return [];
             var row = trimmed;
             if (row[0] === "|") row = row.slice(1);
             if (row[row.length - 1] === "|") row = row.slice(0, -1);
-            return row.split("|").map(function (cell) {
-                return cell.trim();
-            });
+            var cells = []; var current = "";
+            var incode = false; var codedelim = 0;
+            for (var i = 0; i < row.length; i++) {
+                var ch = row[i];
+                // allow escaping | in table cells!
+                if (ch === "\\" && row[i + 1] === "|") {
+                    current += "|"; i++; continue;
+                }
+                if (ch === "`") {
+                    var run = 1;
+                    while (i + run < row.length && row[i + run] === "`") run++;
+                    if (!incode) {
+                        incode = true;
+                        codedelim = run;
+                    } else if (run >= codedelim) {
+                        incode = false;
+                        codedelim = 0;
+                    }
+                    current += row.slice(i, i + run);
+                    i += run - 1;
+                    continue;
+                }
+                var cansplit = !maxcells || cells.length < (maxcells - 1);
+                if (ch === "|" && !incode && cansplit) {
+                    cells.push(current.trim());
+                    current = "";
+                    continue;
+                }
+                current += ch;
+            }
+            cells.push(current.trim());
+            return cells;
         }
         function alignfromcell(cell) {
             var source = String(cell || "").trim();
@@ -869,12 +940,19 @@
                         }; i++; continue;
                     }
                 } else if (intable) {
-                    var datacells = splitrowcells(trimmed);
-                    if (datacells.length === currenttable.headers.length) {
-                        currenttable.rows.push(datacells);
-                        continue;
+                    var datacells = splitrowcells(trimmed, currenttable.headers.length);
+                    if (datacells.length !== currenttable.headers.length) {
+                        if (datacells.length > currenttable.headers.length) {
+                            var kept = datacells.slice(0, currenttable.headers.length - 1);
+                            var tail = datacells.slice(currenttable.headers.length - 1).join(" | ");
+                            kept.push(tail);
+                            datacells = kept;
+                        } else {
+                            while (datacells.length < currenttable.headers.length) datacells.push("");
+                        }
                     }
-                    closetable();
+                    currenttable.rows.push(datacells);
+                    continue;
                 }
             } else if (intable) {closetable()}
 
