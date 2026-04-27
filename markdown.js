@@ -58,16 +58,20 @@
         var decoded = "";
         try {decoded = decodeURIComponent(raw || "")} catch (_err) {decoded = String(raw || "")}
         decoded = decoded.trim();
-        var q = decoded.indexOf("?");
-        var article = q === -1 ? decoded : decoded.slice(0, q);
-        var query = q === -1 ? "" : decoded.slice(q + 1);
-        article = tonormalwidth(article.trim());
+
+        var splitidx = decoded.indexOf("&");
+        if (splitidx === -1) splitidx = decoded.indexOf("?");
+        var articlepart = splitidx === -1 ? decoded : decoded.slice(0, splitidx);
+        var query = splitidx === -1 ? "" : decoded.slice(splitidx + 1);
+
+        var article = tonormalwidth(articlepart.trim()).replace(/_/g, " ");
         return { raw: raw, article: article, query: query };
     }
     function maybeNormalizeVisibleHash(parts) {
         var article = parts.article || "";
         if (!article) article = "Main Page";
-        var rebuilt = article + (parts.query ? ("?" + parts.query) : "");
+        var underscored = tonormalwidth(article).trim().replace(/\s+/g, " ").replace(/ /g, "_");
+        var rebuilt = underscored + (parts.query ? ("&" + parts.query) : "");
         var encoded = "#" + encodeURIComponent(rebuilt);
         if (window.location.hash !== encoded) {
             try {history.replaceState(null, "", encoded)} catch (_err) {}
@@ -88,6 +92,7 @@
     }
     function setqueryparam(hasharticle, query, key, value) {
         var base = String(hasharticle || "").trim() || "Main Page";
+        base = tonormalwidth(base).replace(/\s+/g, " ").replace(/ /g, "_");
         var q = String(query || "").trim();
         var entries = [];
         if (q) {
@@ -101,7 +106,7 @@
             });
         }
         if (value !== "") entries.push(key + "=" + encodeURIComponent(value));
-        var rebuilt = base + (entries.length ? ("?" + entries.join("&")) : "");
+        var rebuilt = base + (entries.length ? ("&" + entries.join("&")) : "");
         return "#" + encodeURIComponent(rebuilt);
     }
     function slugifyheading(text) {
@@ -323,6 +328,15 @@
             escapes.push(ch);
             return token;
         });
+
+        var codespans = [];
+        neutralized = neutralized.replace(/``([^`]+)``|`([^`]+)`/g, function (_m, dbl, sng) {
+            var content = typeof dbl === "string" && dbl !== "" ? dbl : (typeof sng === "string" ? sng : "");
+            var token = "%%code" + codespans.length + "%%";
+            codespans.push(content);
+            return token;
+        });
+
         var safe = escapehtml(neutralized);
         safe = safe.replace(/&lt;\s*br\s*\/?\s*&gt;/gi, "<br>");
         safe = safe.split("\n").map(function (line) {
@@ -336,9 +350,6 @@
         }).join("\n");
 
         safe = safe
-            // inline code with single or double ticks
-            .replace(/``([^`]+)``/g, "<code>$1</code>")
-            .replace(/`([^`]+)`/g, "<code>$1</code>")
             // bold
             .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
             // italic
@@ -379,6 +390,11 @@
 
         escapes.forEach(function (ch, idx) {
             safe = safe.replace(new RegExp("%%esc" + idx + "%%", "g"), escapehtml(ch));
+        });
+
+        codespans.forEach(function (content, idx) {
+            var html = "<code>" + escapehtml(content) + "</code>";
+            safe = safe.replace(new RegExp("%%code" + idx + "%%", "g"), html);
         });
         return safe;
     }
@@ -998,8 +1014,8 @@
         var used = {};
         var pageparts = parsedhash();
         var article = pageparts.article || "Main Page";
-        var h1s = scope.querySelectorAll("h1:not(.title)");
-        h1s.forEach(function (h) {
+        var headings = scope.querySelectorAll("h1:not(.title), h2");
+        headings.forEach(function (h) {
             if (h.dataset.headingEnhanced === "1") return;
             h.dataset.headingEnhanced = "1";
 

@@ -5,6 +5,8 @@ This is a **super cool** page! You can use it for a rough reference of how _mark
 > "update on the Steam version of Cut the Rope: we're still working on it and hope to return it in 2024" 
 > - Om Nom @Cut\_The\_Rope · Dec 8, 2023
 
+Hello! Привет! 你好! Okay, no mandarin fonts, sorry...
+
 ::infobox
 title: Cabbit
 image: cabbit.webp
@@ -73,9 +75,9 @@ caption: You usually won't be able to see this caption
 ::
 
 | Thing | Meaning | Notes |
-|:--|:--|--:|
+|:---|:---|---:|
 | `[[Wiki link]]` | link to another article | supports `[[Target|Custom text]]` |
-| `[^id]` | citation reference | define `[^id]: desc \| https://example.com` |
+| `[^id]` | citation reference | define `[^id]: desc ｜ https://example.com` |
 | `::media` | embed a file | local files default to `articles/Media/` |
 
 :::msg
@@ -84,7 +86,7 @@ message: The icon is loaded from `assets/images/msg/[something].png`, so todo wi
 :::
 :::msg
 kind: warning
-message: Hi
+message: 𝓗𝓲
 :::
 
 

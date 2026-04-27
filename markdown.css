@@ -4,7 +4,7 @@
     overflow: hidden;
 }
 
-.content h1:not(.title) {
+.content h1:not(.title), .content h2 {
     display: flex; 
     align-items: baseline; gap: 8px;
 }

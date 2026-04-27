@@ -49,16 +49,20 @@ document.addEventListener("DOMContentLoaded", function() {
         var decoded = "";
         try {decoded = decodeURIComponent(raw || "")} catch (_err) {decoded = String(raw || "")}
         decoded = decoded.trim();
-        var q = decoded.indexOf("?");
-        var article = q === -1 ? decoded : decoded.slice(0, q);
-        var query = q === -1 ? "" : decoded.slice(q + 1);
-        article = tonormalwidth(article.trim());
+
+        var splitidx = decoded.indexOf("&");
+        if (splitidx === -1) splitidx = decoded.indexOf("?");
+        var articlepart = splitidx === -1 ? decoded : decoded.slice(0, splitidx);
+        var query = splitidx === -1 ? "" : decoded.slice(splitidx + 1);
+
+        var article = tonormalwidth(articlepart.trim()).replace(/_/g, " ");
         return { raw: raw, article: article, query: query };
     }
     function visiblehashfix(parts) {
         var article = parts.article || "";
         if (!article) article = "Main_Page";
-        var rebuilt = article + (parts.query ? ("?" + parts.query) : "");
+        var underscored = tonormalwidth(article).trim().replace(/\s+/g, " ").replace(/ /g, "_");
+        var rebuilt = underscored + (parts.query ? ("&" + parts.query) : "");
         var encoded = "#" + encodeURIComponent(rebuilt);
         if (window.location.hash !== encoded) {
             try {history.replaceState(null, "", encoded)} catch (_err) {}
@@ -122,7 +126,8 @@ document.addEventListener("DOMContentLoaded", function() {
     function gethashslug() {
         var parts = parsedhash();
         visiblehashfix(parts);
-        return encodeURIComponent((parts.article || "Main_Page") + (parts.query ? ("?" + parts.query) : ""));
+        var base = tonormalwidth(parts.article || "Main_Page").trim().replace(/\s+/g, " ").replace(/ /g, "_");
+        return encodeURIComponent(base + (parts.query ? ("&" + parts.query) : ""));
     }
     function copywithfeedback(link, value, shownvalue) {
         var display = shownvalue || value;

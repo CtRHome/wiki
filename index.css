@@ -6,6 +6,11 @@
     font-weight: 400; font-style: normal;
 }
 @font-face {
+    font-family: "segoe print"; /* semi-official (famobi) cyrillic alt */
+    src: url("assets/fonts/segoeprintbold.woff") format("woff");
+    font-weight: 400; font-style: normal;
+}
+@font-face {
     font-family: "jetbrains mono";
     src: url("assets/fonts/jetbrainsmono.woff") format("woff");
     font-weight: 400; font-style: normal;
@@ -25,7 +30,7 @@
 body {
     min-height: 100vh; color: white;
     font-size: 1.1em; line-height: 1;
-    font-family: "gooddog", "comic sans ms", system-ui, sans-serif;
+    font-family: "gooddog", "segoe print", "comic sans ms", system-ui, sans-serif;
     text-shadow: var(--stroke);
     background-color: #e9a856;
     --bg: url("assets/images/bg.webp");
