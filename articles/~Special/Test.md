@@ -9,7 +9,7 @@ This is a **super cool** page! You can use it for a rough reference of how _mark
 title: Cabbit
 image: cabbit.webp
 Species: Holy moly...
--: Note that you have to provide something to the left (not a space) or the row will be ignored. articles/Media is used by default!
+-: Note that you have to provide something to the left (not a space) or the row will be ignored. `articles/Media` is used by default!
 Suggestion: Try slightly compressing your files so that they load faster on user's end! [SVGs](https://jakearchibald.github.io/svgomg/) · [GIFs](https://ezgif.com/optimize) (use gifski where it's beneficial) · [other images](https://squoosh-multiple-export.vercel.app/)
 Author: [koty\_vezde](https://www.instagram.com/koty_vezde/)
 ::
@@ -23,6 +23,7 @@ Author: [koty\_vezde](https://www.instagram.com/koty_vezde/)
 
 # one
 ## two
+-# (both have a direct link icon)
 ### three
 #### four
 ##### five
@@ -70,5 +71,30 @@ Have a source[^example], but not here[^?]
 url: https://github.com/CtRHome/CutTheRope-WindowsDecomp/raw/refs/heads/main/CutTheRope.cjs
 caption: You usually won't be able to see this caption
 ::
+
+| Thing | Meaning | Notes |
+|:--|:--|--:|
+| `[[Wiki link]]` | link to another article | supports `[[Target|Custom text]]` |
+| `[^id]` | citation reference | define `[^id]: desc \| https://example.com` |
+| `::media` | embed a file | local files default to `articles/Media/` |
+
+:::msg
+kind: todo
+message: The icon is loaded from `assets/images/msg/[something].png`, so todo will use todo.png and have a "Todo:" title.
+:::
+:::msg
+kind: warning
+message: Hi
+:::
+
+
+```
+#REDIRECT [[Main_Page]]
+```
+for article links
+```
+#REDIRECT https://example.com
+```
+for url links! (please don't abuse this one)
 
 [^example]: Woof | https://github.com/CtRHome/wiki

@@ -2,6 +2,8 @@
 
 Members from the [Cut the Rope Home Organization](https://github.com/ctrh-org) are free to directly commit to the repository, meanwhile others are free to send pull requests for review. When editing various files as a non-collaborator GitHub automatically suggests creating a fork so this should hopefully be easy to do.
 
+----
+
 ## Writing articles
 
 - Set a proper name for your article — it will be the same as the filename, except with all underscores (`_`) swapped for spaces (` `).
@@ -19,8 +21,14 @@ Members from the [Cut the Rope Home Organization](https://github.com/ctrh-org) a
 
 See the [Markdown Example](https://ctrhome.github.io/wiki#Special:Preview) page for more!
 
+----
+
+Characters like `?` and `:` can’t exist in filenames on Windows, so you should use fullwidth versions (`？` `：`) if needed. The wiki will still attempt to show the normal characters where possible...
+
 You can also use the [Article Playground](https://ctrhome.github.io/wiki#Special:Preview) tab to see how the markdown will look on the wiki. Better yet, go [download this repository](https://github.com/CtRHome/wiki/archive/refs/heads/main.zip) and use the Live Preview extension in VSCode to see it in action more efficiently!
 <sup><sup>Unless you're on a phone, then the Article Playground is your only option...</sup></sup> 
+
+----
 
 ## Editing wiki code
 
@@ -73,6 +81,8 @@ Any code additions or changes that do not have
 - Or the opposite — [convoluted functions](articles/Media/goodpractice.jpg) that can be easily done in a much simpler way
 
 should be fine to do!
+
+----
 
 **Slight roadblocks**
 <sup>· All of the CSS usually has multiple properties stacked per line to reduce the space taken up;</sup>

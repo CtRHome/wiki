@@ -37,6 +37,89 @@
 
     /*//////////////////////////////////////////////////////////////////////*/
 
+    // since nobody can really create filenames with special characters, we're pulling the yt-dlp method babye
+    function tonormalwidth(val) {
+        var s = String(val || "");
+        try {return s.normalize("NFKC")} catch (_err) {return s}
+    }
+    function tofullwidthfilename(val) {
+        var s = String(val || "");
+        var map = {
+            "<": "＜", ">": "＞",
+            ":": "：", "\"": "＂",
+            "/": "／", "\\": "＼",
+            "|": "｜", "?": "？",
+            "*": "＊"
+        };
+        return s.replace(/[<>:"/\\|?*]/g, function (ch) {return map[ch] || ch;});
+    }
+    function parsedhash() {
+        var raw = window.location.hash ? window.location.hash.slice(1) : "";
+        var decoded = "";
+        try {decoded = decodeURIComponent(raw || "")} catch (_err) {decoded = String(raw || "")}
+        decoded = decoded.trim();
+        var q = decoded.indexOf("?");
+        var article = q === -1 ? decoded : decoded.slice(0, q);
+        var query = q === -1 ? "" : decoded.slice(q + 1);
+        article = tonormalwidth(article.trim());
+        return { raw: raw, article: article, query: query };
+    }
+    function maybeNormalizeVisibleHash(parts) {
+        var article = parts.article || "";
+        if (!article) article = "Main Page";
+        var rebuilt = article + (parts.query ? ("?" + parts.query) : "");
+        var encoded = "#" + encodeURIComponent(rebuilt);
+        if (window.location.hash !== encoded) {
+            try {history.replaceState(null, "", encoded)} catch (_err) {}
+        }
+    }
+    function getqueryparam(query, key) {
+        var q = String(query || "").trim();
+        if (!q) return "";
+        var chunks = q.split("&");
+        for (var i = 0; i < chunks.length; i++) {
+            var kv = chunks[i].split("=");
+            var k = (kv[0] || "").trim();
+            if (k !== key) continue;
+            var v = kv.slice(1).join("=");
+            try {return decodeURIComponent(v)} catch (_err) {return v}
+        }
+        return "";
+    }
+    function setqueryparam(hasharticle, query, key, value) {
+        var base = String(hasharticle || "").trim() || "Main Page";
+        var q = String(query || "").trim();
+        var entries = [];
+        if (q) {
+            q.split("&").forEach(function (chunk) {
+                if (!chunk) return;
+                var idx = chunk.indexOf("=");
+                var k = idx === -1 ? chunk : chunk.slice(0, idx);
+                k = String(k || "").trim();
+                if (!k || k === key) return;
+                entries.push(chunk);
+            });
+        }
+        if (value !== "") entries.push(key + "=" + encodeURIComponent(value));
+        var rebuilt = base + (entries.length ? ("?" + entries.join("&")) : "");
+        return "#" + encodeURIComponent(rebuilt);
+    }
+    function slugifyheading(text) {
+        var s = tonormalwidth(String(text || ""));
+        s = s.replace(/<[^>]+>/g, " ");
+        s = s.toLowerCase().trim();
+        s = s.replace(/&[a-z0-9#]+;/gi, " ");
+        s = s.replace(/['"]/g, "");
+        s = s.replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+        return s || "section";
+    }
+    function ensureuniqueid(base, used) {
+        var s = String(base || "").trim() || "section";
+        if (!used[s]) {used[s] = 1; return s}
+        used[s] += 1;
+        return s + "-" + used[s];
+    }
+
     function escapehtml(val) {
         return String(val || "")
             .replace(/&/g, "&amp;")
@@ -214,15 +297,17 @@
     /*//////////////////////////////////////////////////////////////////////*/
 
     function normalizehash() {
-        var raw = window.location.hash ? window.location.hash.slice(1) : "Main Page";
-        if (!raw) raw = "Main Page";
-        return decodeURIComponent(raw.trim());
+        var parts = parsedhash();
+        var article = parts.article || "Main Page";
+        maybeNormalizeVisibleHash(parts);
+        return article;
     }
     function displaytitlefrompagename(pagename) {
-        return pagename.replace(/_/g, " ").trim() || "Untitled";
+        return tonormalwidth(pagename).replace(/_/g, " ").trim() || "Untitled";
     }
     function wikilinktohash(target) {
-        return "#" + target.trim();
+        var cleaned = tonormalwidth(String(target || "").trim());
+        return "#" + encodeURIComponent(cleaned);
     }
 
     /*//////////////////////////////////////////////////////////////////////*/
@@ -738,7 +823,8 @@
             if (heading) {
                 closelist(); closequote(); closetable();
                 var lvl = heading[1].length;
-                html.push("<h" + lvl + ">" + inlinewithcites(heading[2]) + "</h" + lvl + ">"); continue;
+                html.push("<h" + lvl + " data-heading-source=\"" + escapeattr(heading[2]) + "\">" + inlinewithcites(heading[2]) + "</h" + lvl + ">");
+                continue;
             }
 
             // separators
@@ -850,13 +936,15 @@
         var spaced = pagename;
         var hashtitle = hasprefix ? (prefix + ":" + spaced) : spaced;
 
+        var diskprefix = tofullwidthfilename(prefix);
+        var diskname = tofullwidthfilename(spaced);
         var candidates = hasprefix
             ? [
-                "articles/~" + prefix + "/" + spaced + ".md",
-                "articles/~" + prefix.toLowerCase() + "/" + spaced + ".md"
+                "articles/~" + diskprefix + "/" + diskname + ".md",
+                "articles/~" + diskprefix.toLowerCase() + "/" + diskname + ".md"
             ]
             : [
-                "articles/" + spaced + ".md"
+                "articles/" + diskname + ".md"
             ];
 
         return { title: title, hashtitle: hashtitle, candidates: candidates };
@@ -905,6 +993,49 @@
     function setpagetitle(hashtitle) {
         document.title = hashtitle + " - Cut the Rope Modding Wiki!";
     }
+    function enhanceheadings(scope) {
+        if (!scope) return;
+        var used = {};
+        var pageparts = parsedhash();
+        var article = pageparts.article || "Main Page";
+        var h1s = scope.querySelectorAll("h1:not(.title)");
+        h1s.forEach(function (h) {
+            if (h.dataset.headingEnhanced === "1") return;
+            h.dataset.headingEnhanced = "1";
+
+            var source = h.getAttribute("data-heading-source") || h.textContent || "";
+            var slug = ensureuniqueid(slugifyheading(source), used);
+            h.id = slug;
+
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "copyheadinglink";
+            btn.setAttribute("aria-label", "Copy link to this section");
+
+            var img = document.createElement("img");
+            img.src = "assets/images/icons/copylink.png";
+            btn.appendChild(img);
+
+            btn.addEventListener("click", function (e) {
+                e.preventDefault(); e.stopPropagation();
+                var newhash = setqueryparam(article, pageparts.query, "h", slug);
+                try {history.replaceState(null, "", newhash)} catch (_err) {window.location.hash = newhash}
+                var url = window.location.origin + window.location.pathname + newhash;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url).catch(function () {});
+                }
+            }); h.appendChild(btn);
+        });
+    }
+    function scrolltoheadingfromhash(scope) {
+        var parts = parsedhash();
+        var target = getqueryparam(parts.query, "h");
+        if (!target) return;
+        var el = document.getElementById(target);
+        if (!el && scope) el = scope.querySelector("#" + CSS.escape(target));
+        if (!el) return;
+        try {el.scrollIntoView({ behavior: "smooth", block: "start" })} catch (_err) {el.scrollIntoView()}
+    }
     function renderarticle(title, markdown, options) {
         options = options || {};
         var redirectedfrom = options.redirectedfrom || "";
@@ -916,6 +1047,7 @@
         if (window.Prism && typeof window.Prism.highlightAllUnder === "function") {
             window.Prism.highlightAllUnder(contentroot);
         }
+        enhanceheadings(contentroot);
         bindexpandableimages(contentroot);
         bindlocaldebuglinktrigger(contentroot);
         if (!localdebug) {
@@ -936,7 +1068,9 @@
     async function loadarticlefromhash() {
         if (!contentroot) return;
 
-        var hashval = normalizehash();
+        var parts = parsedhash();
+        var hashval = parts.article || "Main Page";
+        maybeNormalizeVisibleHash(parts);
         var inheritedredirectfrom = "";
         if (pendingredirectnotice && pendingredirectnotice.target === hashval) {
             inheritedredirectfrom = pendingredirectnotice.from || "";
@@ -976,12 +1110,13 @@
             currenthash = targethash;
             currentarticle = getarticlecandidates(currenthash);
             setpagetitle(currentarticle.hashtitle);
-            window.location.replace("#" + encodeURIComponent(targethash));
+            window.location.replace("#" + encodeURIComponent(tonormalwidth(targethash)));
             var targetres = await fetchfirstexisting(currentarticle.candidates);
             if (!targetres) break;
             currentres = targetres;
         }
         renderarticle(currentarticle.hashtitle, currentres.markdown, { redirectedfrom: redirectfrom });
+        scrolltoheadingfromhash(contentroot);
         document.dispatchEvent(new CustomEvent("wiki:article-rendered", { detail: { hash: currenthash } }));
     }
 

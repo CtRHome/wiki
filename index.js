@@ -27,6 +27,44 @@ document.addEventListener("DOMContentLoaded", function() {
         if (e.target && e.target.tagName === "IMG") {e.preventDefault()}
     });
 
+    // since nobody can really create filenames with special characters, we're pulling the yt-dlp method babye
+    function tonormalwidth(val) {
+        var s = String(val || "");
+        try {return s.normalize("NFKC")} catch (_err) {return s}
+    }
+    function tofullwidthfilename(val) {
+        var s = String(val || "");
+        var map = {
+            "<": "＜", ">": "＞",
+            ":": "：", "\"": "＂",
+            "/": "／", "\\": "＼",
+            "|": "｜", "?": "？",
+            "*": "＊"
+        };
+        return s.replace(/[<>:"/\\|?*]/g, function (ch) {return map[ch] || ch;});
+    }
+    
+    function parsedhash() {
+        var raw = window.location.hash ? window.location.hash.slice(1) : "";
+        var decoded = "";
+        try {decoded = decodeURIComponent(raw || "")} catch (_err) {decoded = String(raw || "")}
+        decoded = decoded.trim();
+        var q = decoded.indexOf("?");
+        var article = q === -1 ? decoded : decoded.slice(0, q);
+        var query = q === -1 ? "" : decoded.slice(q + 1);
+        article = tonormalwidth(article.trim());
+        return { raw: raw, article: article, query: query };
+    }
+    function visiblehashfix(parts) {
+        var article = parts.article || "";
+        if (!article) article = "Main_Page";
+        var rebuilt = article + (parts.query ? ("?" + parts.query) : "");
+        var encoded = "#" + encodeURIComponent(rebuilt);
+        if (window.location.hash !== encoded) {
+            try {history.replaceState(null, "", encoded)} catch (_err) {}
+        }
+    }
+
     var fandombadge = document.querySelector(".fandombadge");
     if (fandombadge) {
         var fandombadgehiddenkey = "hidefandombadge";
@@ -79,10 +117,12 @@ document.addEventListener("DOMContentLoaded", function() {
         var prefix = hasprefix ? parts[0].trim() : "";
         var body = hasprefix ? parts.slice(1).join(":").trim() : raw;
         var pagename = body.replace(/_/g, " ").replace(/\s+/g, " ").trim();
-        return hasprefix ? (prefix + ":" + pagename) : pagename;
+        return tonormalwidth(hasprefix ? (prefix + ":" + pagename) : pagename);
     }
     function gethashslug() {
-        return window.location.hash ? window.location.hash.substring(1) : "Main_Page";
+        var parts = parsedhash();
+        visiblehashfix(parts);
+        return encodeURIComponent((parts.article || "Main_Page") + (parts.query ? ("?" + parts.query) : ""));
     }
     function copywithfeedback(link, value, shownvalue) {
         var display = shownvalue || value;
@@ -123,7 +163,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (fulllink) {
         fulllink.addEventListener("click", function(e) {
             e.preventDefault();
-            var articlelink = "ctrhome.github.io/wiki#" + gethashslug();
+            var articlelink = "ctrhome.github.io/wiki#" + decodeURIComponent(gethashslug());
             copywithfeedback(fulllink, articlelink, articlelink);
         });
     }
@@ -138,7 +178,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var candidates = getexactarticlecandidates(query);
             var exactpath = await findexistingarticlepath(candidates);
             if (exactpath) {
-                window.location.hash = "#" + querytowikihash(query);
+                window.location.hash = "#" + encodeURIComponent(querytowikihash(query));
                 return;
             }
 
@@ -222,9 +262,11 @@ document.addEventListener("DOMContentLoaded", function() {
     var pendinglasteditpath = "";
 
     function normalizehash() {
-        var raw = window.location.hash ? window.location.hash.slice(1) : "Main_Page";
-        if (!raw) raw = "Main_Page";
-        return decodeURIComponent(raw.trim());
+        var parts = parsedhash();
+        visiblehashfix(parts);
+        var article = parts.article || "Main_Page";
+        if (!article) article = "Main_Page";
+        return article;
     }
 
     function getarticlepathfromhash() {
@@ -234,9 +276,11 @@ document.addEventListener("DOMContentLoaded", function() {
         var prefix = hasprefix ? parts[0].trim() : "";
         var rawpage = hasprefix ? parts.slice(1).join(":").trim() : hash.trim();
         var pagename = rawpage.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+        var diskprefix = tofullwidthfilename(prefix);
+        var diskname = tofullwidthfilename(pagename);
         return hasprefix
-            ? "articles/~" + prefix + "/" + pagename + ".md"
-            : "articles/" + pagename + ".md";
+            ? "articles/~" + diskprefix + "/" + diskname + ".md"
+            : "articles/" + diskname + ".md";
     }
 
     /*//////////////////////////////////////////////////////////////////////*/
@@ -247,8 +291,8 @@ document.addEventListener("DOMContentLoaded", function() {
         var hasprefix = parts.length > 1;
         var prefix = hasprefix ? parts[0].trim() : "";
         var rawpage = hasprefix ? parts.slice(1).join(":").trim() : hash.trim();
-        var pretty = rawpage.replace(/_/g, " ");
-        return hasprefix ? (prefix + ":" + pretty) : pretty;
+        var pretty = tonormalwidth(rawpage).replace(/_/g, " ");
+        return tonormalwidth(hasprefix ? (prefix + ":" + pretty) : pretty);
     }
 
     async function mayberedirectrandompage() {

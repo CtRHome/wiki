@@ -4,6 +4,25 @@
     overflow: hidden;
 }
 
+.content h1:not(.title) {
+    display: flex; 
+    align-items: baseline; gap: 8px;
+}
+.copyheadinglink {
+    border: 0; padding: 0;
+    background: transparent; opacity: 0.75;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    cursor: url("assets/static/cursors/link.cur"), default !important;
+}
+.copyheadinglink:hover {opacity: 1}
+.copyheadinglink img {
+    width: auto; height: 1.25em;
+    object-fit: contain;
+}
+
+/*//////////////////////////////////////////////////////////////////////*/
+
 ol * {
     word-break: break-all;
     overflow-wrap: anywhere;
