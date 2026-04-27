@@ -1,5 +1,7 @@
 <img src="assets/svgs/biglogo.svg">
 
+> (WIP, for a finished site please come back later)
+
 *Welcome!* This repository serves as a host for markdown files for the wiki and its code. It is all published straight from the repository through GitHub Pages.
 See ``/articles/`` for the full list.
 
@@ -29,13 +31,6 @@ See ``/articles/`` for the full list.
       <ul>
         <li>Repository</li>
         <li>Additional help</li>
-      </ul>
-    </td>
-    <td>
-      <b><a href="https://github.com/octocat">TODO</a></b><br>
-      <ul>
-        <li>lorem ipsum</li>
-        <li>sit amet</li>
       </ul>
     </td>
   </tr>
