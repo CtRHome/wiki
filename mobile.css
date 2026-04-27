@@ -1,0 +1,62 @@
+/* mobile mode! */
+@media (max-width: 800px) {
+    .page {grid-template-columns: 1fr; padding: 0 20px}
+    .title {padding-right: 0.5em}
+    .sidebar {
+        order: 1; display: flex; flex-direction: row;
+        align-items: center; gap: 1em; justify-content: left;
+    }
+    .logo {margin: 0; max-width: 120px}
+    .wikititle {font-size: 1.25em}
+    .sidebar > .title {margin: 0; padding: 0}
+    .sidebarlinks {
+        display: flex; flex-direction: row;
+        align-items: center; gap: 0.5em;
+        height: max-content;
+    }
+    .sidebarlinks .navblock {margin-top: 0}
+    .navblocktitle {display: none}
+
+    .main {order: 2}
+    .search {flex-basis: clamp(110px, 34vw, 220px)}
+    /* .infobox {
+        float: none; margin-left: 0;
+        width: 100%;
+    }
+    .embedleft, .embedright {
+        float: none; width: 100%;
+        margin-left: 0; margin-right: 0;
+    } */
+    .footer {
+        grid-template-columns: 1fr;
+        row-gap: 10px;
+    }
+    .footerbadges {
+        grid-column: 1;
+        grid-row: auto;
+    }
+}
+
+@media (max-width: 560px) {
+    .infobox {
+        float: none; width: 100%;
+        max-width: none;
+        margin: 0 0 14px 0;
+    }
+    .embed, .embedleft, .embedright {
+        float: none; clear: both;
+        width: 100%; max-width: none;
+        margin-left: 0; margin-right: 0;
+    }
+    .embed video, .embed img, .embed audio {max-width: 100%}
+}
+
+/* slight tweaks for extremely low width, 
+   usually not possible but my sites are so mobile unfriendly it's best to at least care */
+@media (max-width: 460px) {
+    .tab {
+        font-size: 0.9em; height: 2.5em;
+        min-width: 0; padding: 10px 4px;
+        width: min-content;
+    }
+}

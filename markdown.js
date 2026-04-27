@@ -233,6 +233,14 @@
         try {parsed = new URL(href, window.location.href)}
         catch (_err) {return "#"}
 
+        var pathname = parsed.pathname || "";
+        var localmd = pathname.match(/\/articles\/(?:~([^/]+)\/)?(.+)\.md$/i);
+        if (localmd) {
+            var prefix = localmd[1] ? (localmd[1] + ":") : "";
+            var page = decodeURIComponent(localmd[2] || "").replace(/_/g, " ").replace(/\s+/g, " ").trim();
+            if (page) return escapeattr(makewikihref(prefix + page));
+        }
+
         var protocol = parsed.protocol.toLowerCase();
         if (protocol === "http:" || protocol === "https:" || protocol === "mailto:") {
             return escapeattr(parsed.href);
@@ -319,15 +327,16 @@
 
     function parseinline(txt, opts) {
         opts = opts || {};
-        var rendercitationref = typeof opts.rendercitationref === "function"
-            ? opts.rendercitationref
-            : (typeof activecitationrenderer === "function" ? activecitationrenderer : null);
-        var escapes = [];
-        var neutralized = String(txt || "").replace(/\\([\\`*_~\[\]\(\)-])/g, function (_, ch) {
-            var token = "%%esc" + escapes.length + "%%";
-            escapes.push(ch);
-            return token;
-        });
+        try {
+            var rendercitationref = typeof opts.rendercitationref === "function"
+                ? opts.rendercitationref
+                : (typeof activecitationrenderer === "function" ? activecitationrenderer : null);
+            var escapes = [];
+            var neutralized = String(txt || "").replace(/\\([\\`*_~\[\]\(\)-])/g, function (_, ch) {
+                var token = "%%esc" + escapes.length + "%%";
+                escapes.push(ch);
+                return token;
+            });
 
         // REALLY overkill logic to try and ignore markdown inside code blocks/monospace text.
         // that's how the table in Special:Test doesn't crumble from the pipes and squared brackets
@@ -416,25 +425,64 @@
             var html = "<code>" + escapehtml(content) + "</code>";
             safe = safe.replace(new RegExp("%%code" + idx + "%%", "g"), html);
         });
-        return safe;
+            return safe;
+        } catch (_err) {
+            return escapehtml(String(txt || "")).replace(/\n/g, "<br>");
+        }
     }
 
+    // if it's not here, it won't play! no auto guessing types, sorry, have these long hardcoded lists
     function guessmediatype(ext) {
-        var image = { png: 1, jpg: 1, jpeg: 1, webp: 1, gif: 1, bmp: 1, ico: 1, avif: 1 };
-        var audio = { mp3: 1, wav: 1, ogg: 1, m4a: 1, aac: 1, flac: 1 };
-        var video = { mp4: 1, webm: 1, ogv: 1, mov: 1, m4v: 1 };
+        var image = {png: 1, jpg: 1, jpeg: 1, webp: 1, gif: 1, bmp: 1, ico: 1, avif: 1};
+        var audio = {mp3: 1, wav: 1, ogg: 1, m4a: 1, aac: 1, flac: 1, opus: 1};
+        var video = {mp4: 1, webm: 1, ogv: 1, mov: 1, m4v: 1};
         if (image[ext]) return "image";
         if (audio[ext]) return "audio";
         if (video[ext]) return "video";
         return "unknown";
     }
-    function mediarenderhtml(url, mediatype) {
+    function mediarenderhtml(url, mediatype, attrs) {
         var safeurl = escapeattr(url);
-        if (mediatype === "image") return '<img loading="lazy" src="' + safeurl + '">';
-        if (mediatype === "audio") return '<audio controls preload="metadata" src="' + safeurl + '"></audio>';
-        if (mediatype === "video") return '<video controls preload="metadata" src="' + safeurl + '"></video>';
+        var attrhtml = attrs ? (" " + attrs) : "";
+        if (mediatype === "image") return '<img loading="lazy" src="' + safeurl + '"' + attrhtml + ">";
+        if (mediatype === "audio") return '<audio controls preload="metadata" src="' + safeurl + '"' + attrhtml + "></audio>";
+        if (mediatype === "video") return '<video controls preload="metadata" src="' + safeurl + '"' + attrhtml + "></video>";
         var filename = escapehtml(getdecodedfilenamefromurl(url));
         return '<p class="paragraph"><a href="' + safeurl + '">' + filename + "</a></p>";
+    }
+    function buildmediafallback(rawurl) {
+        var val = String(rawurl || "").trim();
+        if (!val) return "";
+        if (/^(https?:|data:|javascript:|\/\/|#)/i.test(val)) return "";
+        if (/^articles\/media\//i.test(val)) return "";
+        return maybeprependlocalimagepath(val);
+    }
+    function bindmediafallbacks(scope) {
+        if (!scope) return;
+        var mediaels = scope.querySelectorAll(".embed img, .embed audio, .embed video");
+        mediaels.forEach(function (el) {
+            if (el.dataset.fallbackBound === "1") return;
+            el.dataset.fallbackBound = "1";
+            var originalsrc = el.getAttribute("src") || "";
+            var explicitfallback = el.getAttribute("data-fallback-src") || "";
+            var fallbacksrc = explicitfallback || buildmediafallback(originalsrc);
+            var figure = el.closest("figure.embed");
+            var firsterr = "";
+
+            el.addEventListener("error", function () {
+                if (!el.dataset.fallbackTried && fallbacksrc) {
+                    el.dataset.fallbackTried = "1";
+                    firsterr = "Could not load media from `" + originalsrc + "`.";
+                    el.src = fallbacksrc;
+                    if (typeof el.load === "function") el.load();
+                    return;
+                }
+                if (!figure) return;
+                var secondmsg = "Could not load media from `" + (fallbacksrc || originalsrc) + "`.";
+                var text = (firsterr ? (firsterr + " ") : "") + secondmsg;
+                figure.outerHTML = renderdangercard("Media failed to load", text);
+            });
+        });
     }
     function renderdangercard(title, text) {
         return (
@@ -518,10 +566,12 @@
 
             var mediatype = chosenmediatype || guessmediatype(media.ext);
             var alignclass = alignment ? " embed" + alignment : "";
+            var fallbacksrc = buildmediafallback(rawmediaurl);
+            var mediaattrs = fallbacksrc ? ('data-fallback-src="' + escapeattr(fallbacksrc) + '"') : "";
 
             return (
                 '<figure class="embed' + alignclass + '">' +
-                mediarenderhtml(media.url, mediatype) +
+                mediarenderhtml(media.url, mediatype, mediaattrs) +
                 (data.caption ? "<figcaption>" + parseinline(data.caption) + "</figcaption>" : "") +
                 "</figure>"
             );
@@ -1141,12 +1191,9 @@
         if (window.Prism && typeof window.Prism.highlightAllUnder === "function") {
             window.Prism.highlightAllUnder(contentroot);
         }
-        enhanceheadings(contentroot);
-        bindexpandableimages(contentroot);
-        bindlocaldebuglinktrigger(contentroot);
-        if (!localdebug) {
-            updateallarticlelinkstates(contentroot);
-        }
+        enhanceheadings(contentroot); bindexpandableimages(contentroot);
+        bindmediafallbacks(contentroot); bindlocaldebuglinktrigger(contentroot);
+        if (!localdebug) {updateallarticlelinkstates(contentroot)}
         var citeanchors = contentroot.querySelectorAll("[data-cite-target]");
         citeanchors.forEach(function (anchor) {
             anchor.addEventListener("click", function (e) {

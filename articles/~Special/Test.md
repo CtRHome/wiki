@@ -1,3 +1,5 @@
+-# For the Test Test in [[Test Test]], don't see *[[Test]]*.
+
 This is a **super cool** page! You can use it for a rough reference of how _markdown_ ~converts~ into *HTML*...
 <!-- ~~test~~ should work for strikethrough too -->
 <!-- __test__ should work for underline too -->
@@ -58,6 +60,10 @@ text: Spookier!!!
 url: rip.mp4
 caption: TheAwesome*less*Blue
 second line test
+::
+::media
+url: Music/theme.opus
+caption: You can test if your browser supports opus.
 ::
 Text lalalala!
 
