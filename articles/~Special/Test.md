@@ -70,7 +70,7 @@ Text lalalala!
 
 ::media left
 url: https://github.com/CtRHome/CutTheRope-WindowsDecomp/raw/refs/heads/main/CutTheRope.csproj
-caption: I was going to put another cabbit here but i needed to showcase the binary/unrecognized file version
+caption: I was going to put another [cabbit](https://en.wikipedia.org/wiki/Cabbit) here but i needed to showcase the binary/unrecognized file version
 ::
 Text again lalalala!
 
@@ -82,7 +82,7 @@ caption: You usually won't be able to see this caption
 ::
 
 | Thingamabob | Meaningabob | Notabob | Spongebob
-|:---|:---|---:|---:|
+|:---|:---|----|---:|
 | `[[Wiki link]]` | link to another article | supports `[[Target|Custom text]]` | I'm Spongebob! |
 | `[^id]` | citation reference | define `[^id]: desc | https://example.com` | I'm Spongebob! |
 | `::media` | embed a file | local files default to `articles/Media/` | I'm Spongebob! |
@@ -103,6 +103,6 @@ for article links
 ```
 #REDIRECT https://example.com
 ```
-for url links! (please don't abuse this one)
+for external links! (please don't abuse this one)
 
 [^example]: Woof | https://github.com/CtRHome/wiki

@@ -166,7 +166,7 @@ ol * {
     background: rgba(0,0,0,0.25);
     padding: 10px 12px;
 }
-.infobox img {
+.infobox > img {
     display: block;
     width: 100%; object-fit: cover;
 }
