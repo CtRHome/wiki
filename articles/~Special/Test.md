@@ -63,7 +63,8 @@ second line test
 ::
 ::media
 url: Music/theme.opus
-caption: You can test if your browser supports opus.
+caption: You can test if your browser supports opus! 
+Also, this loads from `/Music/theme.opus`, but since that's an invalid url the site automatically loads it with the correct `/articles/Media` prefix instead. Bad practice, but it'll work without console errors!
 ::
 Text lalalala!
 
@@ -94,7 +95,6 @@ message: The icon is loaded from `assets/images/msg/[something].png`, so todo wi
 kind: warning
 message: 𝓗𝓲
 :::
-
 
 ```
 #REDIRECT [[Main_Page]]

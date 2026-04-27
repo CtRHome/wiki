@@ -220,8 +220,8 @@
         var val = String(rawurl || "").trim();
         if (!val) return val;
         if (/^(https?:|data:|javascript:|\/\/|\/|#|\.\/|\.\.\/)/i.test(val)) return val;
-        if (val.indexOf("/") === -1) return "articles/Media/" + val;
-        return val;
+        if (/^articles\/media\//i.test(val)) return val;
+        return "articles/Media/" + val;
     }
     function sanitizehref(rawhref) {
         var href = String(rawhref || "").trim();
@@ -455,7 +455,7 @@
         if (!val) return "";
         if (/^(https?:|data:|javascript:|\/\/|#)/i.test(val)) return "";
         if (/^articles\/media\//i.test(val)) return "";
-        return maybeprependlocalimagepath(val);
+        return "articles/Media/" + val.replace(/^\.?\//, "");
     }
     function bindmediafallbacks(scope) {
         if (!scope) return;
@@ -467,20 +467,17 @@
             var explicitfallback = el.getAttribute("data-fallback-src") || "";
             var fallbacksrc = explicitfallback || buildmediafallback(originalsrc);
             var figure = el.closest("figure.embed");
-            var firsterr = "";
 
             el.addEventListener("error", function () {
                 if (!el.dataset.fallbackTried && fallbacksrc) {
                     el.dataset.fallbackTried = "1";
-                    firsterr = "Could not load media from `" + originalsrc + "`.";
                     el.src = fallbacksrc;
                     if (typeof el.load === "function") el.load();
                     return;
                 }
                 if (!figure) return;
-                var secondmsg = "Could not load media from `" + (fallbacksrc || originalsrc) + "`.";
-                var text = (firsterr ? (firsterr + " ") : "") + secondmsg;
-                figure.outerHTML = renderdangercard("Media failed to load", text);
+                var secondmsg = "Could not load media from `" + (fallbacksrc || originalsrc) + "`... (Fallback link didn\'t work either!)";
+                figure.outerHTML = renderdangercard("Media failed to load", secondmsg);
             });
         });
     }
