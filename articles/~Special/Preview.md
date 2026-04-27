@@ -1,1 +1,1 @@
-Type anything into the **blank field** below to preview your article!
+(Visit this page on the website to enter the visual editor)
