@@ -1,4 +1,4 @@
--# For the equivalent object in *[[Game:Cut the Rope 2|Cut the Rope 2]]*, see [[Object:Balloon|Balloon]].
+-# For the equivalent object in [[Game:Cut the Rope 2|*Cut the Rope 2*]], see [[Object:Balloon|Balloon]].
 
 :: card
 title: Rewrite in progress
