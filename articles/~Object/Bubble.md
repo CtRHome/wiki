@@ -8,7 +8,7 @@ text: This article is currently in the process of being rewritten and does not c
 ::infobox
 title: Bubble
 image: articles/Media/Object/Bubble_CTR_iOS.png
-Appearances: [[Game:Cut the Rope|*Cut the Rope*]], [[Game:Cut the Rope： Holiday Gift|*Cut the Rope: Holiday Gift*]], [[Game: Cut the Rope： Experiments|*Cut the Rope: Experiments*]], [[Game:Cut the Rope： Time Travel|*Cut the Rope: Time Travel*]], [[Game:Cut the Rope： Triple Treat|*Cut the Rope: Triple Treat*]], [[Game:Cut the Rope： Magic|*Cut the Rope: Magic*]], [[Game:Cut the Rope Remastered|*Cut the Rope Remastered*]], [[Game:Cut the Rope Daily|*Cut the Rope Daily*]], [[Game:Cut the Rope： Origins|*Cut the Rope: Origins*]], [[Game:Cut the Rope： H5DX|*Cut the Rope: H5DX*]], [[Game:Cut the Rope： DX|*Cut the Rope: DX*]]
+Appearances: [[Game:Cut the Rope|*Cut the Rope*]], [[Game:Cut the Rope： Holiday Gift|*Cut the Rope: Holiday Gift*]], [[Game: Cut the Rope： Experiments|*Cut the Rope: Experiments*]], [[Game:Cut the Rope： Time Travel|*Cut the Rope: Time Travel*]], [[Game:Cut the Rope： Triple Treat|*Cut the Rope: Triple Treat*]], [[Game:Cut the Rope： Magic|*Cut the Rope: Magic*]], [[Game:Cut the Rope Remastered|*Cut the Rope Remastered*]], [[Game:Cut the Rope Daily|*Cut the Rope Daily*]], [[Game:Cut the Rope： Origins|*Cut the Rope: Origins*]]
 Functionality: Lifts an object once it enters the Bubble.
 Object Types: Static, Interactive
 ::
